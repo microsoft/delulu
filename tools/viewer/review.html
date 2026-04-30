@@ -288,10 +288,14 @@
     font-size: 12.5px;
     line-height: 1.5;
     white-space: pre-wrap;
-    word-break: break-all;
-    overflow-x: auto;
-    max-height: 400px;
-    overflow-y: auto;
+    word-break: break-word;
+    overflow: auto;
+    max-height: 50vh;
+    min-height: 40px;
+  }
+  .code-block.empty {
+    color: var(--text-muted);
+    font-style: italic;
   }
 
   /* ── Comparison view ────────────────────────── */
@@ -808,16 +812,9 @@ function selectItem(index) {
     </div>
 
     <!-- Prompt / Suffix context -->
-    <div class="code-section">
-      <div class="code-section-header"><span class="indicator" style="background:var(--blue)"></span> Prompt (context before)</div>
-      <div class="code-block">${esc(row.prompt || '')}</div>
-    </div>
+    ${renderContextSection('Prompt (context before)', row.prompt, 'var(--blue)')}
 
-    ${row.suffix ? `
-    <div class="code-section">
-      <div class="code-section-header"><span class="indicator" style="background:var(--text-muted)"></span> Suffix (context after)</div>
-      <div class="code-block">${esc(row.suffix)}</div>
-    </div>` : ''}
+    ${renderContextSection('Suffix (context after)', row.suffix, 'var(--text-muted)')}
 
     <!-- Golden vs Hallucinated comparison -->
     <div class="comparison">
@@ -865,6 +862,24 @@ function statusColor(s) {
   if (s === 'accepted') return 'var(--green-text)';
   if (s === 'rejected') return 'var(--red-text)';
   return 'var(--yellow)';
+}
+
+function renderContextSection(title, value, indicatorColor) {
+  const raw = value == null ? '' : String(value);
+  const isEmpty = raw.trim().length === 0;
+  const lineCount = raw ? raw.split('\n').length : 0;
+  const charCount = raw.length;
+  const meta = isEmpty
+    ? '<span style="color:var(--text-muted);font-size:11px;font-weight:400">(empty)</span>'
+    : `<span style="color:var(--text-muted);font-size:11px;font-weight:400">${lineCount} line${lineCount===1?'':'s'} · ${charCount} char${charCount===1?'':'s'}</span>`;
+  const body = isEmpty
+    ? '<div class="code-block empty">(empty)</div>'
+    : `<div class="code-block">${esc(raw)}</div>`;
+  return `
+    <div class="code-section">
+      <div class="code-section-header"><span class="indicator" style="background:${indicatorColor}"></span> ${esc(title)} ${meta}</div>
+      ${body}
+    </div>`;
 }
 
 // ═══════════════════════════════════════════════════════
