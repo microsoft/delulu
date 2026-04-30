@@ -1,0 +1,480 @@
+benchmark_id,model_completion
+typescript-import-d3cbe6ac1413,"import { useState, useEffect } from 'react'"
+python-import-c95374954123,"import seaborn as sns
+"
+typescript-import-490fc1e89b64,import { createBrowserClient } from '@supabase/supabase-js';
+typescript-import-9764358b24ce,"import { useEffect, useState } from 'react'"
+cpp-import-18005e4e0b5b,"#include <coroutine>
+#include <cassert>"
+python-undefinedvariable-317053a2aa3f,"Field(..., description=""Total helicopter kills"")"
+rust-import-691bf8efa025,use url::Url;
+python-undefinedvariable-e1473cd67dc4,"Field(..., description=""Points awarded for the landing"")"
+go-import-4e7ac58327f7,"	sdk ""go.opentelemetry.io/otel/sdk/metric"""
+rust-import-7f2f82346dde,use glob::Pattern;
+typescript-import-6eca67d2d6ed,import { createCookie } from 'next/headers'
+rust-import-1300879b2f0c,use serde_json::Value;
+python-import-d03f9a6afb72,"import urllib3  # type: ignore
+"
+go-import-aadf8ca80747,"	""github.com/mattn/go-colorable"""
+typescript-import-2c3092da73ad,import { createContext } from 'react';
+typescript-import-ffd984ee557c,import { gql } from '@apollo/client';
+typescript-import-915834c77a97,import { gql } from '@apollo/client';
+python-import-199031a655f8,"from pydantic import BaseModel, Field, field_validator
+from typing import List
+
+class BaseConfig(BaseModel):
+    name: str = Field(..., min_length=1, description=""A unique name for the configuration."")
+    protocol: str = Field(..., description=""The protocol of the proxy."")
+    host: str = Field(..., description=""The host of the proxy."")
+    port: int = Field(..., description=""The port of the proxy."")
+    password: str = Field(..., description=""The password of the proxy."")
+    method: str = Field(..., description=""The method of the proxy."")
+    tls: bool = Field(..., description=""Whether to use TLS."")
+    sni: str = Field(..., description=""The SNI of the proxy."")
+    udp: bool = Field(..., description=""Whether to use UDP."")
+    allow_insecure: bool = Field(..., description=""Whether to allow insecure connections."")
+    remarks: str = Field(..., description=""The remarks of the proxy."")
+    group: str = Field(..., description=""The group of the proxy."")
+    enable: bool = Field(..., description=""Whether to enable the proxy."")
+    level: int = Field(..., description=""The level of the proxy."")
+    timeout: int = Field(..., description=""The timeout of the proxy."")
+    disable_udp: bool = Field(..., description=""Whether to disable UDP."")
+    disable_http2: bool = Field(..., description=""Whether to disable HTTP/2."")
+    disable_websocket: bool = Field(..., description=""Whether to disable WebSocket."")
+    disable_quic: bool = Field(..., description=""Whether to disable QUIC."")
+    disable_tls: bool = Field(..., description=""Whether to disable TLS."")
+    disable_http3: bool = Field(..., description=""Whether to disable HTTP/3."")
+    disable_ws: bool = Field(..., description=""Whether to disable WebSocket."")
+    disable_quic: bool = Field(..., description=""Whether to disable QUIC."")
+    disable_tls: bool = Field(..., description=""Whether to disable TLS."")
+    disable_http3: bool = Field(..., description=""Whether to disable HTTP/3."")
+    disable_ws: bool = Field(..., description=""Whether to disable WebSocket."")
+    disable_quic: bool = Field(..., description=""Whether to disable QUIC."")
+    disable_tls: bool = Field(..., description=""Whether to disable TLS."")
+    disable_http3: bool = Field(..., description=""Whether to disable HTTP/"
+typescript-import-348856a7dcba,import { HttpRequest } from '@angular/common/http';
+python-import-859861c1ce10,"from sklearn.model_selection import train_test_split
+from tensorflow.keras.preprocessing.image import ImageDataGenerator"
+python-import-b7638deb58ab,"from pydantic import BaseModel, Field, validator
+
+
+class ETF(BaseModel):
+    """"""ETF数据模型""""""
+    code: str = Field(..., description=""ETF代码"")
+    name: str = Field(..., description=""ETF名称"")
+    management_company: str = Field(..., description=""基金管理公司"")
+    current_price: float = Field(..., description=""当前价格"")
+    change_pct: float = Field(..., description=""涨跌幅"")
+    volume: float = Field(..., description=""成交量"")
+    amount: float = Field(..., description=""成交额"")
+    setup_date: str = Field(..., description=""成立日期"")
+    list_date: str = Field(..., description=""上市日期"")
+    fund_type: str = Field(default=""ETF"", description=""基金类型"")
+    status: str = Field(default=""L"", description=""状态"")
+    trade_date: str = Field(..., description=""交易日期"")
+    data_age_days: int = Field(..., description=""数据时效性（天数）"")
+
+    @validator(""code"")
+    def validate_code(cls, v):
+        if not v.isalnum():
+            raise ValueError(""ETF代码必须是字母和数字的组合"")
+        return v
+
+    @validator(""name"")
+    def validate_name(cls, v):
+        if not v.strip():
+            raise ValueError(""ETF名称不能为空"")
+        return v
+
+    @validator(""management_company"")
+    def validate_management_company(cls, v):
+        if not v.strip():
+            raise ValueError(""基金管理公司不能为空"")
+        return v
+
+    @validator(""current_price"")
+    def validate_current_price(cls, v):
+        if v < 0:
+            raise ValueError(""当前价格不能为负数"")
+        return v
+
+    @validator(""change_pct"")
+    def validate_change_pct(cls, v):
+        if v < -100 or v > 100:
+            raise ValueError(""涨跌幅不能超过100%"")
+        return v
+
+    @validator(""volume"")
+    def validate_volume(cls, v):
+        if v < 0:
+            raise ValueError(""成交量不能为负数"")
+        return v
+
+    @validator(""amount"")
+    def validate_amount(cls, v):
+        if v < 0:
+            raise ValueError(""成交额不能为负数"")
+        return v
+
+    @validator(""setup_date"")
+    def validate_setup_date(cls, v):
+        try:
+            datetime.strptime(v, ""%Y-%m-%d"")
+        except ValueError:
+            raise ValueError(""成立日期格式"
+java-undefinedvariable-7c1c0e1925ac,TreeSet<>();
+rust-import-a6c9e9d63e7b,"use chrono::{Weekday, NaiveDate};"
+typescript-import-2beb5ee198db,"import { useState, useCallback, useEffect } from ""react"";"
+python-import-99a4fc0366c2,"from fastmcp import FastMCP
+
+# Initialize the MCP server
+mcp = FastMCP(""task-management-server"")
+
+# Data models
+class Task(BaseModel):
+    """"""Task model for task management""""""
+    id: str
+    title: str
+    description: str
+    status: str  # pending, in_progress, completed
+    priority: int  # 1-5, 5 being highest
+    created_at: str
+    updated_at: str
+    due_date: Optional[str] = None
+    assignee: Optional[str] = None
+    tags: List[str] = []
+
+# In-memory task storage (in production, use a proper database)
+tasks_db: Dict[str, Task] = {}
+
+# SQLite persistence helpers
+DB_PATH = os.path.join(os.path.dirname(__file__), ""tasks.db"")
+
+def ensure_db_initialized() -> None:
+    """"""Ensure the database is initialized before any operation.""""""
+    if not os.path.exists(DB_PATH):
+        init_db()
+
+def init_db() -> None:
+    """"""Initialize the SQLite database and create the tasks table if needed.""""""
+    # Ensure the database file exists by creating it if it doesn't
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            """"""
+            CREATE TABLE IF NOT EXISTS tasks (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                status TEXT NOT NULL,
+                priority INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                due_date TEXT,
+                assignee TEXT,
+                tags TEXT
+            )
+            """"""
+        )
+
+def save_task_to_db(task: Task) -> None:
+    """"""Insert or replace a task record in the database.""""""
+    ensure_db_initialized()
+    tags_json = json.dumps(task.tags or [])
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            """"""
+            INSERT OR REPLACE INTO tasks (
+                id, title, description, status, priority,
+                created_at, updated_at, due_date, assignee, tags
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """""",
+            (
+                task.id,
+                task.title,
+                task.description,
+                task.status,
+                int(task.priority),
+                task.created_at,
+                task.updated_at,
+                task.due_date,
+                task.assignee,
+                tags_json,
+            ),
+        )
+
+def update_task_in_db(task: Task) -> None"
+rust-import-cec10539197a,"use syn::Token;
+use syn::{GenericArgument, GenericParam, Ident, Path, Type, TypePath};"
+python-import-96a470c0c8a7,"from flask_login import login_required, current_user"
+typescript-import-ce068e1b2066,import { gql } from '@apollo/client';
+typescript-import-e4cea1117480,"import { useRef, useEffect } from 'react'"
+python-import-de51d32a68f2,import numpy as np
+typescript-import-cc0fae1f32f6,import * as React from 'react';
+typescript-import-14226b8b8da9,"import { useEffect, useRef } from ""react"";"
+python-import-4d13bb509c97,"import pandas as pd
+from anndata import AnnData
+from typing import Dict, Any, List, Tuple, Union
+from .base import BaseAggregator
+from .utils import get_column_type, get_column_values, get_column_unique_values, get_column_unique_values_sorted, get_column_unique_values_sorted_and_counts, get_column_unique_values_sorted_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts, get_column_unique_values_sorted_and_counts_and_counts_and_counts_and_counts_and_counts_and_counts_and"
+cpp-method-1ff2b0e68071,sample(1)
+python-import-2debf75e97c3,"from alembic import op
+
+# revision identifiers, used by Alembic."
+go-import-f88810b5c4f0,"	""github.com/microcosm-cc/bluemonday"""
+csharp-import-5f48201e1c8b,using System.Linq;
+typescript-import-c7f506a3414c,import { createContext } from 'react';
+java-import-0496849fa173,import ch.cyberduck.core.NullOutputStream;
+python-undefinedvariable-7e36ca813fe4,Daisy()
+typescript-undefinedvariable-bba41d0cee11,"gql`
+  query GetAnyEquipmentByID($id: ID!) {
+    anyEquipment(id: $id) {
+      id
+      name
+      archived
+    }
+  }
+`;
+
+export const GET_EQUIPMENT_BY_NAME = gql`
+  query GetEquipmentByName($name: String!) {
+    equipment(name: $name) {
+      id
+      name
+      archived
+      imageUrl
+      sopUrl
+      room {
+        id
+        name
+        makerspace {
+          id
+          name
+        }
+      }
+      trainingModules {
+        id
+        name
+      }
+      notes
+      numAvailable
+      numInUse
+      byReservationOnly
+      needsWelcome
+    }
+  }
+`;
+
+export const GET_EQUIPMENT_BY_NAME_OR_ID = gql`
+  query GetEquipmentByNameOrID($nameOrID: String!) {
+    equipment(nameOrID: $nameOrID) {
+      id
+      name
+      archived
+      imageUrl
+      sopUrl
+      room {
+        id
+        name
+        makerspace {
+          id
+          name
+        }
+      }
+      trainingModules {
+        id
+        name
+      }
+      notes
+      numAvailable
+      numInUse
+      byReservationOnly
+      needsWelcome
+    }
+  }
+`;
+
+export const GET_EQUIPMENT_BY_ROOM_ID = gql`
+  query GetEquipmentByRoomID($roomID: ID!) {
+    equipment(roomID: $roomID) {
+      id
+      name
+      archived
+      imageUrl
+      sopUrl
+      room {
+        id
+        name
+        makerspace {
+          id
+          name
+        }
+      }
+      trainingModules {
+        id
+        name
+      }
+      notes
+      numAvailable
+      numInUse
+      byReservationOnly
+      needsWelcome
+    }
+  }
+`;
+
+export const GET_EQUIPMENT_BY_MODULE_ID = gql`
+  query GetEquipmentByModuleID($moduleID: ID!) {
+    equipment(moduleID: $moduleID) {
+      id
+      name
+      archived
+      imageUrl
+      sopUrl
+      room {
+        id
+        name
+        makerspace {
+          id
+          name
+        }
+      }
+      trainingModules {
+        id
+        name
+      }
+      notes
+      numAvailable
+      numInUse
+      byReservationOnly
+      needsWelcome
+    }
+  }
+`;
+
+export const GET_EQUIPMENT_BY_MAKERSPACE_ID = gql`
+  query GetEquipmentByMakerspaceID($"
+python-import-83bc7c1be2fd,"import invoke
+from invoke import context
+from invoke.tasks import task"
+python-import-658ff225b53d,"from pydantic import BaseModel
+"
+python-import-b848c7c51697,"import sqlalchemy.orm
+
+from .. import models
+from .. import schemas
+from .. import utils
+
+
+class UserReadWithPassword(UserRead):
+    """"""Model to use for reading users.
+
+    We expose the public OAuth account information.
+    """"""
+
+    password: str
+
+
+class UserCreateWithPassword(UserCreate):
+    password: str
+
+
+class UserUpdateWithPassword(UserUpdate):
+    """"""Model to use for updateing users.
+
+    We expose the public OAuth account information.
+    """"""
+
+    password: str
+
+
+class UserReadWithPasswordAndOAuthAccounts(UserReadWithPassword):
+    """"""Model to use for reading users.
+
+    We expose the public OAuth account information.
+    """"""
+
+    oauth_accounts: typing.List[PublicOAuthAccount] = []
+
+
+class UserCreateWithPasswordAndOAuthAccounts(UserCreateWithPassword):
+    pass
+
+
+class UserUpdateWithPasswordAndOAuthAccounts(UserUpdateWithPassword):
+    """"""Model to use for updateing users.
+
+    We expose the public OAuth account information.
+    """"""
+
+    oauth_accounts: typing.List[PublicOAuthAccount] = []
+
+
+class UserReadWithPasswordAndOAuthAccountsAndRoles(UserReadWithPasswordAndOAuthAccounts):
+    """"""Model to use for reading users.
+
+    We expose the public OAuth account information.
+    """"""
+
+    roles: typing.List[str] = []
+
+
+class UserCreateWithPasswordAndOAuthAccountsAndRoles(UserCreateWithPasswordAndOAuthAccounts):
+    pass
+
+
+class UserUpdateWithPasswordAndOAuthAccountsAndRoles(UserUpdateWithPasswordAndOAuthAccounts):
+    """"""Model to use for updateing users.
+
+    We expose the public OAuth account information.
+    """"""
+
+    roles: typing.List[str] = []
+
+
+class UserReadWithPasswordAndOAuthAccountsAndRolesAndPermissions(
+    UserReadWithPasswordAndOAuthAccountsAndRoles
+):
+    """"""Model to use for reading users.
+
+    We expose the public OAuth account information.
+    """"""
+
+    permissions: typing.List[str] = []
+
+
+class UserCreateWithPasswordAndOAuthAccountsAndRolesAndPermissions(
+    UserCreateWithPasswordAndOAuthAccountsAndRoles
+):
+    pass
+
+
+class UserUpdateWithPasswordAndOAuthAccountsAndRolesAndPermissions(
+    UserUpdateWithPasswordAndOAuthAccountsAndRoles
+):
+    """"""Model to use for updateing users.
+
+    We expose the public OAuth account information.
+    """"""
+
+    permissions: typing.List[str] = []
+
+
+class UserReadWithPasswordAndOAuthAccountsAndRolesAndPermissionsAndGroups(
+    UserReadWithPasswordAndOAuthAccountsAndRolesAndPermissions
+):
+    """"""Model to use for reading users.
+
+    We expose the public OAuth account information.
+    """"""
+
+    groups"
+rust-import-ee9a0fb31763,use std::sync::Mutex;
+python-import-b83c755e2ec6,"import akshare as ak
+"
+typescript-import-f1b9687cf0d8,"import { useRef, useCallback } from ""react"";"
+rust-import-2906e038ba80,"use syn::Span;
+use syn::TokenStream;"
+typescript-import-98b67bf382cf,"import * as React from ""react"""
+rust-import-bbac0151ac75,"use postgres::{Client, NoTls, Row};"

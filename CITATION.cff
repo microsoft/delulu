@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use Delulu, please cite the paper below."
+title: "Delulu: A Multilingual Benchmark for Code Completion Hallucinations"
+authors:
+  - family-names: "TBD"
+    given-names: "TBD"
+version: "1.0.0"
+date-released: "2026-04-30"
+license: MIT
+repository-code: "https://github.com/delulu-bench/delulu"
+url: "https://github.com/delulu-bench/delulu"
+preferred-citation:
+  type: article
+  title: "Delulu: A Multilingual Benchmark for Code Completion Hallucinations"
+  authors:
+    - family-names: "TBD"
+      given-names: "TBD"
+  year: 2026
+  journal: "arXiv preprint"
+  identifiers:
+    - type: other
+      value: "arXiv:TBD"

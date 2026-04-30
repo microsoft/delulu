@@ -1,0 +1,33 @@
+benchmark_id,model_completion
+csharp-import-15397cff2e5d,using System.Globalization;
+csharp-import-d69eb8259eae,using System.Linq;
+csharp-import-f59dd8904dee,using System.Net;
+java-import-b197c78b48bb,import com.nimbusds.jose.util.DefaultResourceRetriever;
+csharp-import-e32031701a23,using BenchmarkDotNet.Attributes;
+java-import-fea7ffb13304,import java.text.MessageFormat;
+csharp-import-9f1a9034e3de,"using System.Collections.Generic;
+using NUnit.Framework;
+using Snippets.NUnit.Data;"
+csharp-import-d44ec43b57fa,using BenchmarkDotNet.Toolchains.CsProjCore;
+java-import-c3bebf06c521,import java.util.Objects;
+java-undefinedvariable-00370f88e38c,"getMethod(""getChildren"").invoke(node);
+        } catch (Exception e) {
+            throw new RuntimeException(""Error invoking Xpp3Dom.getChildren"", e);
+        }
+    }
+
+    public static Object getChild(Object node, int index) {
+        try {
+            return (Object) node.getClass().getMethod(""getChild"", int.class).invoke(node, index);"
+java-import-f5f4188dab8f,import java.util.Vector;
+java-import-4ff811fc8ff9,import java.util.Objects;
+csharp-import-5ff96a0efbf4,using System.Net;
+java-import-2f0ae3db6fff,import org.javatuples.MutableInt;
+java-import-b2b1cd391c47,import com.amazonaws.services.lambda.runtime.events.KinesisFirehoseEvent;
+csharp-import-b70687011dbd,"using System.Linq;
+using NUnit.Framework;
+"
+java-import-2a39b447e63a,import java.util.HashMap;
+java-import-5aba27238fcb,import java.io.Serializable;
+csharp-import-d6b3dade0e85,using System.Net;
+csharp-import-dd50affc2104,using System.Runtime.Serialization.Json;

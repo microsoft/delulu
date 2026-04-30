@@ -1,0 +1,32 @@
+benchmark_id,model_completion
+go-method-e9ac561d7779,StoreMessageInfo(mi)
+python-undefinedvariable-681700c5cbff,"find_all(""p"")"
+typescript-import-452f0459d667,import { Knex } from 'knex';
+typescript-import-98b1bf11ffa3,"import {useQuery as useGraphqlQuery} from ""@apollo/client/react"";"
+csharp-undefinedvariable-3d8f06dc510b,"Guid(""00062041-0000-0000-C000-000000000046"");"
+csharp-undefinedvariable-6a1bbeaf7f11,"Define<int>(
+                LogLevel.Debug,
+                new EventId(1018, ""SendLoopFinished""),
+                ""[Sckt {SocketId}] send loop finished"");"
+go-undefinedvariable-c990868ac6fc,"ParseWithClaims(
+		accessToken,
+		&AgentTokenClaims{},
+		func(token *jwt.Token) (any, error) {
+			_, ok := token.Method.(*jwt.SigningMethodHMAC)
+			if !ok {
+				return nil, errors.New(""unexpected token signing method"")
+			}
+
+			return []byte(manager.secretKey), nil
+		},
+	)"
+python-undefinedvariable-b4c4f235c952,"button(""Sidebar secondary button"")"
+rust-undefinedvariable-635e47878e6c,"GenericArgument::Type(Type::Path(TypePath {
+        path: Path::from(ident),
+        qself: None,
+    }))"
+rust-import-5735a4ca20f6,use once_cell::sync::Lazy;
+cpp-import-88655b26136c,#include <armadillo>
+cpp-undefinedvariable-b0cdddb61f20,"upsample_image_dataset<pyramid_down<3> >(images_train, hand_boxes_train);"
+java-parameter-f903c6cfaa9b,((QueryInfo)o).instanceId.equals(this.instanceId);
+java-method-e4bb09a99511,increment();
