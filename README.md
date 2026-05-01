@@ -93,7 +93,6 @@ A browsable UI for the dataset is shipped as a Docker image — see
 
 ```bash
 docker run --rm -p 8000:8000 \
-    -v "$PWD/data:/app/output" \
     -v /var/run/docker.sock:/var/run/docker.sock \
     delulubench/delulu-viewer:v1
 ```
