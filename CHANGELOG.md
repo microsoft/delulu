@@ -4,7 +4,7 @@
 
 Initial public release.
 
-- 1,961 manually-reviewed Fill-in-the-Middle samples across 7 languages
+- 1,951 manually-reviewed Fill-in-the-Middle samples across 7 languages
   (C++, C#, Go, Java, Python, Rust, TypeScript).
 - 4 hallucination types: `import`, `method`, `parameter`, `undefinedvariable`.
 - Per-language execution-based Docker verifiers.

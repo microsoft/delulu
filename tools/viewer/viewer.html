@@ -773,12 +773,13 @@ function renderRow() {
   const errMsg      = row.error_message || '';
   const benchId     = row.benchmark_id || '';
   const imageTag    = row.image_tag || '';
-  const registryRepo = row.registry_repo || '';
   const license     = (row.license || '').trim();
   const repoUrl     = (row.repo_url || '').trim();
-  // Build full image ref: if registry_repo has no '/', it's just the repo name — prepend ACR host
-  const fullRepo = registryRepo.includes('/') ? registryRepo : (registryRepo ? 'mahdiregistry-fvbqenfeafd3hwgu.azurecr.io/' + registryRepo : '');
-  const dockerImage = fullRepo ? fullRepo + ':v1' : imageTag;
+  // Build full image ref. Public images live at ${REGISTRY}/${imageTag}.
+  // Override the registry by setting `window.DELULU_REGISTRY` before loading
+  // the page; defaults to the placeholder shown below.
+  const REGISTRY = (window.DELULU_REGISTRY || 'delulubench').replace(/\/+$/, '');
+  const dockerImage = imageTag ? REGISTRY + '/' + imageTag : '';
   currentDockerImage = dockerImage;
 
   const prefixLines  = prefix ? prefix.split('\n') : [];
@@ -806,7 +807,7 @@ function renderRow() {
     codeHtml += renderCollapsible(suffixLines, 'ctx', ' ');
   }
 
-  const fullImage = fullRepo || imageTag;
+  const fullImage = dockerImage || imageTag;
   const pullCmd   = dockerImage;
   const verifyCmd = `docker run --rm ${dockerImage} verify hallucinated`;
 

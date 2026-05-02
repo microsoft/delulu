@@ -1,6 +1,6 @@
 # Delulu Dataset
 
-`delulu.csv` — 1,961 rows, UTF-8, comma-separated, header row included.
+`delulu.csv` — 1,951 rows, UTF-8, comma-separated, header row included.
 
 ## Schema
 
@@ -24,14 +24,14 @@
 
 | Language | Samples | | Hallucination type | Samples |
 | --- | ---: | --- | --- | ---: |
-| typescript | 420 | | undefinedvariable | 579 |
-| python | 383 | | import | 483 |
-| go | 291 | | method | 463 |
-| rust | 253 | | parameter | 436 |
+| typescript | 420 | | undefinedvariable | 577 |
+| python | 374 | | import | 478 |
+| go | 291 | | method | 461 |
+| rust | 252 | | parameter | 435 |
 | csharp | 246 | | | |
 | java | 243 | | | |
 | cpp | 125 | | | |
-| **Total** | **1,961** | | **Total** | **1,961** |
+| **Total** | **1,951** | | **Total** | **1,951** |
 
 ## Loading
 

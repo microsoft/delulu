@@ -15,14 +15,14 @@ so any score on Delulu is execution-grounded.
 
 | Languages | Samples | Hallucination types |
 | --- | --- | --- |
-| C++, C#, Go, Java, JavaScript / TypeScript, Python, Rust | **1,961** | `import`, `method`, `parameter`, `undefinedvariable` |
+| C++, C#, Go, Java, JavaScript / TypeScript, Python, Rust | **1,951** | `import`, `method`, `parameter`, `undefinedvariable` |
 
 | Language | Count | | Type | Count |
 | --- | ---: | --- | --- | ---: |
-| TypeScript | 420 | | undefinedvariable | 579 |
-| Python | 383 | | import | 483 |
-| Go | 291 | | method | 463 |
-| Rust | 253 | | parameter | 436 |
+| TypeScript | 420 | | undefinedvariable | 577 |
+| Python | 374 | | import | 478 |
+| Go | 291 | | method | 461 |
+| Rust | 252 | | parameter | 435 |
 | C# | 246 | | | |
 | Java | 243 | | | |
 | C++ | 125 | | | |

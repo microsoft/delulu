@@ -14,7 +14,7 @@ methods, and wrong parameter names.
 
 ## Composition
 
-- **Instances**: 1,961 FIM samples drawn from public GitHub repositories.
+- **Instances**: 1,951 FIM samples drawn from public GitHub repositories.
 - **Languages**: C++, C#, Go, Java, Python, Rust, TypeScript.
 - **Hallucination types**: `import`, `method`, `parameter`, `undefinedvariable`.
 - **Per-instance fields**: see [README.md](README.md) for the schema.
