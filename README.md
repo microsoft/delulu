@@ -15,7 +15,7 @@ so any score on Delulu is execution-grounded.
 
 | Languages | Samples | Hallucination types |
 | --- | --- | --- |
-| C++, C#, Go, Java, JavaScript / TypeScript, Python, Rust | **1,951** | `import`, `method`, `parameter`, `undefinedvariable` |
+| C++, C#, Go, Java, JavaScript / TypeScript, Python, Rust | **1,947** | `import`, `method`, `parameter`, `undefinedvariable` |
 
 | Language | Count | | Type | Count |
 | --- | ---: | --- | --- | ---: |
@@ -105,11 +105,12 @@ df = load_delulu()
 print(df.shape, df["language"].value_counts())
 ```
 
-A HuggingFace mirror is also available (TBA):
+A Hugging Face mirror is published at
+[microsoft/delulu-fim-benchmark](https://huggingface.co/datasets/microsoft/delulu-fim-benchmark):
 
 ```python
 from datasets import load_dataset
-ds = load_dataset("delulu-bench/delulu", split="test")
+ds = load_dataset("microsoft/delulu-fim-benchmark", split="test")
 ```
 
 For an end-to-end 5-minute walkthrough, see [examples/quickstart.md](examples/quickstart.md).
@@ -117,11 +118,11 @@ For an end-to-end 5-minute walkthrough, see [examples/quickstart.md](examples/qu
 ## Citation
 
 ```bibtex
-@article{delulu2026,
-  title  = {Delulu: A Multilingual Benchmark for Code Completion Hallucinations},
-  author = {TBD},
+@misc{delulu2026,
+  title  = {Delulu: A Verified Multi-Lingual Benchmark for Code Hallucination Detection in Fill-in-the-Middle Tasks},
+  author = {Erfanian, Mahdi and Troncoso, Nelson Daniel and Garg, Aashna and Gale, Amabel and Liu, Xiaoyu and Golnari, Pareesa Ameneh and Fu, Shengyu},
   year   = {2026},
-  eprint = {arXiv:TBD}
+  url    = {https://github.com/microsoft/delulu}
 }
 ```
 
@@ -137,5 +138,5 @@ A machine-readable citation is in [CITATION.cff](CITATION.cff).
 ## Links
 
 - Paper (arXiv): _TBA_
-- HuggingFace dataset: _TBA_
+- Hugging Face dataset: <https://huggingface.co/datasets/microsoft/delulu-fim-benchmark>
 - Docker Hub: _TBA_

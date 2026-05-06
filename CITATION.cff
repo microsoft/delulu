@@ -1,22 +1,42 @@
-cff-version: 1.2.0
+﻿cff-version: 1.2.0
 message: "If you use Delulu, please cite the paper below."
-title: "Delulu: A Multilingual Benchmark for Code Completion Hallucinations"
+title: "Delulu: A Verified Multi-Lingual Benchmark for Code Hallucination Detection in Fill-in-the-Middle Tasks"
 authors:
-  - family-names: "TBD"
-    given-names: "TBD"
-version: "1.0.0"
-date-released: "2026-04-30"
+  - family-names: "Erfanian"
+    given-names: "Mahdi"
+  - family-names: "Troncoso"
+    given-names: "Nelson Daniel"
+  - family-names: "Garg"
+    given-names: "Aashna"
+  - family-names: "Gale"
+    given-names: "Amabel"
+  - family-names: "Liu"
+    given-names: "Xiaoyu"
+  - family-names: "Golnari"
+    given-names: "Pareesa Ameneh"
+  - family-names: "Fu"
+    given-names: "Shengyu"
+version: "1.1.0"
+date-released: "2026-05-06"
 license: MIT
-repository-code: "https://github.com/delulu-bench/delulu"
-url: "https://github.com/delulu-bench/delulu"
+repository-code: "https://github.com/microsoft/delulu"
+url: "https://github.com/microsoft/delulu"
 preferred-citation:
   type: article
-  title: "Delulu: A Multilingual Benchmark for Code Completion Hallucinations"
+  title: "Delulu: A Verified Multi-Lingual Benchmark for Code Hallucination Detection in Fill-in-the-Middle Tasks"
   authors:
-    - family-names: "TBD"
-      given-names: "TBD"
+    - family-names: "Erfanian"
+      given-names: "Mahdi"
+    - family-names: "Troncoso"
+      given-names: "Nelson Daniel"
+    - family-names: "Garg"
+      given-names: "Aashna"
+    - family-names: "Gale"
+      given-names: "Amabel"
+    - family-names: "Liu"
+      given-names: "Xiaoyu"
+    - family-names: "Golnari"
+      given-names: "Pareesa Ameneh"
+    - family-names: "Fu"
+      given-names: "Shengyu"
   year: 2026
-  journal: "arXiv preprint"
-  identifiers:
-    - type: other
-      value: "arXiv:TBD"
