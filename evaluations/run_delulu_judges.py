@@ -58,22 +58,30 @@ except ImportError:
 
 # ── Default model registry ──────────────────────────────────────────
 # Users override `deployment` to match their own deployment names / model ids.
+#
+# `temperature` controls each judge's sampling. We default to 0.0 so that
+# leaderboard numbers are reproducible: judges return a binary 0/1 label, so
+# any sampling noise translates directly into label noise. Some recent
+# reasoning-only deployments (notably the GPT-5.x Codex "responses" models)
+# only accept temperature=1.0; those entries are flagged below.
 DEFAULT_MODELS: dict[str, dict] = {
     # Azure OpenAI (chat completions)
-    "GPT-5.1":       {"deployment": "gpt-5.1",       "api": "chat",      "temperature": 1.0},
-    "GPT-5.2":       {"deployment": "gpt-5.2",       "api": "chat",      "temperature": 1.0},
-    "GPT-5.4":       {"deployment": "gpt-5.4",       "api": "chat",      "temperature": 1.0},
-    "GPT-5.5":       {"deployment": "gpt-5.5",       "api": "chat",      "temperature": 1.0},
-    # Azure OpenAI (responses API)
+    "GPT-5.1":       {"deployment": "gpt-5.1",       "api": "chat",      "temperature": 0.0},
+    "GPT-5.2":       {"deployment": "gpt-5.2",       "api": "chat",      "temperature": 0.0},
+    "GPT-5.4":       {"deployment": "gpt-5.4",       "api": "chat",      "temperature": 0.0},
+    "GPT-5.5":       {"deployment": "gpt-5.5",       "api": "chat",      "temperature": 0.0},
+    # Azure OpenAI (responses API). The GPT-5.x Codex deployments currently
+    # require temperature=1.0; we keep that and document it as the source of
+    # any small run-to-run variance for these two judges only.
     "GPT-5.2-Codex": {"deployment": "gpt-5.2-codex", "api": "responses", "temperature": 1.0},
     "GPT-5.3-Codex": {"deployment": "gpt-5.3-codex", "api": "responses", "temperature": 1.0},
     # Anthropic
-    "Claude-4.5-Sonnet": {"deployment": "claude-sonnet-4-5", "api": "claude", "temperature": 1.0},
-    "Claude-4.5-Haiku":  {"deployment": "claude-haiku-4-5",  "api": "claude", "temperature": 1.0},
-    "Claude-4.5-Opus":   {"deployment": "claude-opus-4-5",   "api": "claude", "temperature": 1.0},
+    "Claude-4.5-Sonnet": {"deployment": "claude-sonnet-4-5", "api": "claude", "temperature": 0.0},
+    "Claude-4.5-Haiku":  {"deployment": "claude-haiku-4-5",  "api": "claude", "temperature": 0.0},
+    "Claude-4.5-Opus":   {"deployment": "claude-opus-4-5",   "api": "claude", "temperature": 0.0},
     # Google
-    "Gemini-2.5-Pro":   {"deployment": "gemini-2.5-pro",   "api": "gemini", "temperature": 1.0},
-    "Gemini-2.5-Flash": {"deployment": "gemini-2.5-flash", "api": "gemini", "temperature": 1.0},
+    "Gemini-2.5-Pro":   {"deployment": "gemini-2.5-pro",   "api": "gemini", "temperature": 0.0},
+    "Gemini-2.5-Flash": {"deployment": "gemini-2.5-flash", "api": "gemini", "temperature": 0.0},
 }
 
 MAX_TOKENS = 4096
@@ -109,15 +117,20 @@ def build_user_prompt(prefix: str, completion: str, suffix: str) -> str:
 
 
 def parse_score(text: str) -> int:
-    m = re.search(r"Final Average Score for Completion:\s*(\d+)", text)
+    """Strict score parser.
+
+    The judge prompt mandates a final line of the form
+    `Final Average Score for Completion: <0 or 1>`; anything else counts as a
+    parse failure (return -1) so the caller can flag it instead of silently
+    accepting a stray digit from the chain-of-thought as the label.
+    """
+    m = re.search(
+        r"Final\s+Average\s+Score\s+for\s+Completion\s*:\s*([01])\b",
+        text,
+        flags=re.IGNORECASE,
+    )
     if m:
         return int(m.group(1))
-    m = re.search(r"\bScore\b[:\s]+(\d)\b", text)
-    if m:
-        return int(m.group(1))
-    digits = re.findall(r"\b([01])\b", text)
-    if digits:
-        return int(digits[-1])
     return -1
 
 

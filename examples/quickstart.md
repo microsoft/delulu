@@ -53,7 +53,7 @@ Expect to wait a couple of minutes the first time while images download.
 ## 6. Browse the dataset visually
 
 ```bash
-docker run --rm -p 8000:8000 \
+docker run --rm -p 127.0.0.1:8000:8000 \
     -v "$PWD/data:/app/output" \
     -v /var/run/docker.sock:/var/run/docker.sock \
     delulubench/delulu-viewer:v1

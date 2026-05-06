@@ -13,15 +13,15 @@ so any score on Delulu is execution-grounded.
 
 ## Stats
 
-| Languages | Samples | Hallucination types |
-| --- | --- | --- |
-| C++, C#, Go, Java, JavaScript / TypeScript, Python, Rust | **1,947** | `import`, `method`, `parameter`, `undefinedvariable` |
+| Languages | Samples | Unique FIM contexts | Hallucination types |
+| --- | --- | --- | --- |
+| C++, C#, Go, Java, TypeScript, Python, Rust | **1,947** | 947 | `import`, `method`, `parameter`, `undefinedvariable` |
 
 | Language | Count | | Type | Count |
 | --- | ---: | --- | --- | ---: |
-| TypeScript | 420 | | undefinedvariable | 577 |
-| Python | 374 | | import | 478 |
-| Go | 291 | | method | 461 |
+| TypeScript | 420 | | undefinedvariable | 576 |
+| Python | 370 | | import | 476 |
+| Go | 291 | | method | 460 |
 | Rust | 252 | | parameter | 435 |
 | C# | 246 | | | |
 | Java | 243 | | | |
@@ -32,7 +32,7 @@ so any score on Delulu is execution-grounded.
 ```
 data/                # delulu.csv + datasheet
 tools/
-  load.py / stats.py / slice.py / inspect.py    # CLIs for working with the dataset
+  load.py / stats.py / slice.py / show.py    # CLIs for working with the dataset
   viewer/                                       # browser UI (also a Docker image)
 evaluations/
   run_delulu_judges.py        # LLM-as-judge harness (the "judge" tool)
@@ -92,7 +92,7 @@ A browsable UI for the dataset is shipped as a Docker image — see
 [tools/viewer/README.md](tools/viewer/README.md):
 
 ```bash
-docker run --rm -p 8000:8000 \
+docker run --rm -p 127.0.0.1:8000:8000 \
     -v /var/run/docker.sock:/var/run/docker.sock \
     delulubench/delulu-viewer:v1
 ```

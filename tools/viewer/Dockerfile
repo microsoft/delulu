@@ -37,6 +37,7 @@ RUN mkdir -p /app/output
 # Strip script execute bits — keep things simple.
 EXPOSE 8000
 
-# Run on 0.0.0.0 so it's reachable from the host browser. Don't open a
-# browser inside the container.
-ENTRYPOINT ["python", "/app/serve_viewer.py", "--port", "8000", "--no-browser"]
+# Run on 0.0.0.0 inside the container so it's reachable from the host. The
+# API drives the Docker daemon, so always publish to loopback only:
+#   docker run -p 127.0.0.1:8000:8000 -v /var/run/docker.sock:/var/run/docker.sock ...
+ENTRYPOINT ["python", "/app/serve_viewer.py", "--port", "8000", "--bind", "0.0.0.0", "--no-browser"]

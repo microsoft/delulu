@@ -26,12 +26,46 @@ import http.server
 import io
 import json
 import os
+import re
 import socketserver
 import subprocess
 import sys
 import webbrowser
+from urllib.parse import urlparse
 
 STATIC_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Image allowlist. Only image references whose first path component matches
+# one of these prefixes can be pulled or executed by the viewer. Override
+# with the DELULU_IMAGE_ALLOWLIST env var (comma-separated).
+_DEFAULT_IMAGE_ALLOWLIST = (
+    "delulubench/",                 # planned public Docker Hub org
+    "mcr.microsoft.com/delulu/",    # planned public MCR namespace
+)
+
+
+def _image_allowlist() -> tuple[str, ...]:
+    raw = os.environ.get("DELULU_IMAGE_ALLOWLIST")
+    if raw:
+        return tuple(p.strip() for p in raw.split(",") if p.strip())
+    return _DEFAULT_IMAGE_ALLOWLIST
+
+
+_IMAGE_REF_RE = re.compile(r"^[a-z0-9._\-/]+(:[a-zA-Z0-9._\-]+)?$")
+
+
+def _is_image_allowed(image: str) -> bool:
+    """Reject anything that is not a plain image reference matching the
+    allowlist. Blocks image refs containing shell metacharacters, CLI
+    flags, or untrusted registries."""
+    if not image or not isinstance(image, str):
+        return False
+    if image.startswith("-"):
+        return False  # would be parsed as a docker CLI flag
+    if not _IMAGE_REF_RE.match(image):
+        return False
+    allow = _image_allowlist()
+    return any(image.startswith(p) for p in allow)
 
 
 class ViewerHandler(http.server.SimpleHTTPRequestHandler):
@@ -43,6 +77,9 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
     # ── Routing ──────────────────────────────────
 
     def do_GET(self):
+        if not self._origin_ok():
+            self.send_error(403, "Cross-origin request blocked")
+            return
         path = self.path.split("?", 1)[0]
         if path == "/api/health":
             return self._api_health()
@@ -51,6 +88,9 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
         return super().do_GET()
 
     def do_POST(self):
+        if not self._origin_ok():
+            self.send_error(403, "Cross-origin request blocked")
+            return
         routes = {
             "/api/health": self._api_health,
             "/api/image-check": self._api_image_check,
@@ -67,6 +107,9 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
         self.send_error(404)
 
     def do_OPTIONS(self):
+        if not self._origin_ok():
+            self.send_error(403, "Cross-origin request blocked")
+            return
         self.send_response(204)
         self._cors_headers()
         self.end_headers()
@@ -79,6 +122,25 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
             return {}
         return json.loads(self.rfile.read(length))
 
+    def _origin_ok(self) -> bool:
+        """Reject cross-origin requests so a malicious page in another tab
+        cannot CSRF the local Docker control endpoints.
+
+        Same-origin browsers either omit the Origin header (true same-origin
+        navigation) or send it equal to the viewer's own host. Any *other*
+        Origin is rejected.
+        """
+        origin = self.headers.get("Origin")
+        host = self.headers.get("Host", "")
+        if origin is None:
+            # Same-origin navigation / curl. Allow.
+            return True
+        try:
+            origin_host = urlparse(origin).netloc
+        except Exception:
+            return False
+        return origin_host == host
+
     def _json_response(self, data: dict, status: int = 200):
         body = json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
         self.send_response(status)
@@ -89,7 +151,13 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def _cors_headers(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
+        # Echo only the request's Origin if same-origin; never use "*" so
+        # cross-origin POSTs cannot drive the local Docker endpoints.
+        origin = self.headers.get("Origin")
+        host = self.headers.get("Host", "")
+        if origin and urlparse(origin).netloc == host:
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Vary", "Origin")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
@@ -130,6 +198,12 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
         image = body.get("image", "")
         if not image:
             return self._json_response({"error": "No image specified"}, 400)
+        if not _is_image_allowed(image):
+            return self._json_response(
+                {"error": ("Image rejected: not in allowlist. "
+                           "Set DELULU_IMAGE_ALLOWLIST to override."),
+                 "image": image,
+                 "allowlist": list(_image_allowlist())}, 400)
         rc, _, _ = self._docker(
             ["docker", "image", "inspect", image], timeout=10)
         self._json_response({"pulled": rc == 0, "image": image})
@@ -139,6 +213,12 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
         image = body.get("image", "")
         if not image:
             return self._json_response({"error": "No image specified"}, 400)
+        if not _is_image_allowed(image):
+            return self._json_response(
+                {"error": ("Image rejected: not in allowlist. "
+                           "Set DELULU_IMAGE_ALLOWLIST to override."),
+                 "image": image,
+                 "allowlist": list(_image_allowlist())}, 400)
 
         # Check if already local
         rc, _, _ = self._docker(
@@ -149,7 +229,7 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
 
         # Pull
         rc, stdout, stderr = self._docker(
-            ["docker", "pull", image], timeout=600)
+            ["docker", "pull", "--", image], timeout=600)
         if rc == 0:
             self._json_response({"status": "pulled", "image": image})
         else:
@@ -167,6 +247,12 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
 
         if not image:
             return self._json_response({"error": "No image specified"}, 400)
+        if not _is_image_allowed(image):
+            return self._json_response(
+                {"error": ("Image rejected: not in allowlist. "
+                           "Set DELULU_IMAGE_ALLOWLIST to override."),
+                 "image": image,
+                 "allowlist": list(_image_allowlist())}, 400)
         if not mode:
             return self._json_response({"error": "No mode specified"}, 400)
         if mode not in ("golden", "hallucinated", "patch"):
@@ -178,11 +264,12 @@ class ViewerHandler(http.server.SimpleHTTPRequestHandler):
                 return self._json_response(
                     {"error": "No completion provided for patch mode"}, 400)
             rc, stdout, stderr = self._docker(
-                ["docker", "run", "--rm", "-i", image, "verify", "patch"],
+                ["docker", "run", "--rm", "-i", "--", image,
+                 "verify", "patch"],
                 stdin_data=completion, timeout=180)
         else:
             rc, stdout, stderr = self._docker(
-                ["docker", "run", "--rm", image, "verify", mode],
+                ["docker", "run", "--rm", "--", image, "verify", mode],
                 timeout=180)
 
         # Parse JSON output from entrypoint
@@ -421,25 +508,30 @@ def main():
     parser = argparse.ArgumentParser(
         description="Delulu Benchmark Viewer Server")
     parser.add_argument("--port", "-p", type=int, default=8000)
+    parser.add_argument(
+        "--bind", default="127.0.0.1",
+        help=("Bind address. Defaults to 127.0.0.1 (loopback only). Pass "
+              "0.0.0.0 only on a trusted network; the API exposes Docker."))
     parser.add_argument("--no-browser", action="store_true")
     args = parser.parse_args()
 
-    url = f"http://localhost:{args.port}/viewer.html"
-    review_url = f"http://localhost:{args.port}/review.html"
+    url = f"http://{args.bind}:{args.port}/viewer.html"
+    review_url = f"http://{args.bind}:{args.port}/review.html"
     print(f"\n{'='*55}")
     print(f"  Delulu Benchmark Viewer Server")
     print(f"{'='*55}")
-    print(f"  Viewer:  {url}")
-    print(f"  Review:  {review_url}")
-    print(f"  API:     http://localhost:{args.port}/api/health")
-    print(f"  Static:  {STATIC_DIR}")
+    print(f"  Viewer:    {url}")
+    print(f"  Review:    {review_url}")
+    print(f"  API:       http://{args.bind}:{args.port}/api/health")
+    print(f"  Static:    {STATIC_DIR}")
+    print(f"  Allowlist: {', '.join(_image_allowlist())}")
     print(f"{'='*55}")
     print(f"  Press Ctrl+C to stop\n")
 
     if not args.no_browser:
         webbrowser.open(url)
 
-    server = ThreadedServer(("", args.port), ViewerHandler)
+    server = ThreadedServer((args.bind, args.port), ViewerHandler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

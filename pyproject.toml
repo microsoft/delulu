@@ -9,7 +9,15 @@ description = "A multilingual benchmark for code-completion hallucinations."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "The Delulu Authors" }]
+authors = [
+    { name = "Mahdi Erfanian" },
+    { name = "Nelson Daniel Troncoso" },
+    { name = "Aashna Garg" },
+    { name = "Amabel Gale" },
+    { name = "Xiaoyu Liu" },
+    { name = "Pareesa Ameneh Golnari" },
+    { name = "Shengyu Fu" },
+]
 keywords = ["code", "llm", "hallucination", "benchmark", "fim", "evaluation"]
 
 dependencies = [

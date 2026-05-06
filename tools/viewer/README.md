@@ -12,13 +12,19 @@ browser.
 A pre-built image is published on Docker Hub (TBA):
 
 ```bash
-docker run --rm -p 8000:8000 \
+docker run --rm -p 127.0.0.1:8000:8000 \
     -v "$PWD/data:/app/output" \
     -v /var/run/docker.sock:/var/run/docker.sock \
     delulubench/delulu-viewer:v1
 ```
 
 Then open http://localhost:8000.
+
+> **Security:** the API drives the host's Docker daemon, so always publish the
+> port to loopback only (`-p 127.0.0.1:8000:8000`). The viewer rejects
+> cross-origin requests and refuses to pull / run images outside its
+> allowlist (`delulubench/`, `mcr.microsoft.com/delulu/`); set
+> `DELULU_IMAGE_ALLOWLIST=...` to extend it.
 
 - The `output/` mount is where the viewer looks for CSV files (the dropdown
   in the top bar lists every `*.csv` it finds).
@@ -29,7 +35,8 @@ Then open http://localhost:8000.
 
 ```bash
 cd tools/viewer
-python serve_viewer.py --port 8000
+python serve_viewer.py --port 8000          # binds 127.0.0.1 by default
+python serve_viewer.py --port 8000 --bind 0.0.0.0   # only on a trusted LAN
 ```
 
 By default the server looks for CSVs in `tools/viewer/output/`. Drop or

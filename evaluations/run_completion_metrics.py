@@ -45,12 +45,11 @@ from typing import Optional
 from tqdm import tqdm
 
 
-DEFAULT_REGISTRY = os.environ.get(
-    "DELULU_REGISTRY",
-    # NOTE: pre-release placeholder; replace with the public Docker Hub org
-    # before publication (e.g. "delulubench").
-    "mahdiregistry-fvbqenfeafd3hwgu.azurecr.io",
-)
+# A sentinel value that obviously isn't a real registry; we error out with a
+# clear message instead of silently failing on `docker pull`.
+_REGISTRY_UNSET = "<unset>"
+
+DEFAULT_REGISTRY = os.environ.get("DELULU_REGISTRY", _REGISTRY_UNSET)
 DEFAULT_DATA = Path(__file__).resolve().parent.parent / "data" / "delulu.csv"
 VERIFY_TIMEOUT = 240
 PULL_TIMEOUT = 600
@@ -81,9 +80,27 @@ def edit_similarity(a: str, b: str) -> float:
     return 1.0 - levenshtein(a, b) / m
 
 
-def is_hallucinated_aligned(completion: str, golden: str, hallucinated: str) -> bool:
-    """1 if completion is closer to the hallucinated than the golden variant."""
-    return edit_similarity(completion, hallucinated) > edit_similarity(completion, golden)
+def is_hallucinated_aligned(completion: str, golden: str, hallucinated: str) -> Optional[float]:
+    """Hallucination-alignment score in {0.0, 0.5, 1.0} (or None when both
+    references are missing).
+
+    - 1.0 if the completion is closer to the hallucinated variant than to the
+      golden one (a model-emitted hallucination).
+    - 0.0 if it's strictly closer to the golden completion.
+    - 0.5 on a tie, including the degenerate case where both candidates have
+      the same edit similarity (common for very short completions).
+    The mean of this column over the dataset is the dataset-level
+    hallucination rate.
+    """
+    if not (golden or hallucinated):
+        return None
+    g = edit_similarity(completion, golden or "")
+    h = edit_similarity(completion, hallucinated or "")
+    if h > g:
+        return 1.0
+    if h < g:
+        return 0.0
+    return 0.5
 
 
 # ── Docker verifier ────────────────────────────────────────────────
@@ -202,6 +219,13 @@ def save_cache(cache_dir: Path, model_name: str, cache: dict) -> None:
 # ── Per-sample evaluation ──────────────────────────────────────────
 
 def evaluate_one(bid: str, row: dict, completion: str, registry: str) -> dict:
+    if registry == _REGISTRY_UNSET:
+        raise SystemExit(
+            "No Docker registry configured. Set --registry or the "
+            "DELULU_REGISTRY environment variable to the public Delulu "
+            "image registry (e.g. 'delulubench' once published) before "
+            "running execution-based evaluation."
+        )
     image = f"{registry.rstrip('/')}/{row['image_tag']}"
 
     em = completion.strip() == (row["golden_completion"] or "").strip()
@@ -210,27 +234,26 @@ def evaluate_one(bid: str, row: dict, completion: str, registry: str) -> dict:
         completion, row["golden_completion"] or "", row["hallucinated_completion"] or ""
     )
 
-    pulled, pull_msg = docker_pull(image)
-    if not pulled:
-        return {
-            "benchmark_id": bid,
-            "language": row["language"],
-            "hallucination_type": row["hallucination_type"],
-            "exact_match": em,
-            "edit_similarity": es,
-            "hallucination_aligned": hr,
-            "pass_at_1": None,
-            "error": f"pull failed: {pull_msg}",
-        }
-
-    res = verify_patch(image, completion)
-    return {
+    base = {
         "benchmark_id": bid,
         "language": row["language"],
         "hallucination_type": row["hallucination_type"],
         "exact_match": em,
         "edit_similarity": es,
         "hallucination_aligned": hr,
+        "pass_at_1": None,
+        "verify_exit_code": None,
+        "verify_error": None,
+        "error": None,
+    }
+
+    pulled, pull_msg = docker_pull(image)
+    if not pulled:
+        return {**base, "error": f"pull failed: {pull_msg}"}
+
+    res = verify_patch(image, completion)
+    return {
+        **base,
         "pass_at_1": bool(res.is_valid) if res.is_valid is not None else None,
         "verify_exit_code": res.exit_code,
         "verify_error": res.error_message,
@@ -301,8 +324,10 @@ def main():
     p.add_argument("--cache-dir", type=Path, default=Path("results"),
                    help="Output directory")
     p.add_argument("--registry", default=DEFAULT_REGISTRY,
-                   help=f"Docker registry to pull verifier images from "
-                        f"(default: ${{DELULU_REGISTRY}} or '{DEFAULT_REGISTRY}')")
+                   help=("Docker registry to pull verifier images from. "
+                         "Defaults to the DELULU_REGISTRY environment "
+                         "variable; set it to the public Delulu registry "
+                         "(TBA on Docker Hub) or override per-invocation."))
     p.add_argument("--workers", type=int, default=4,
                    help="Parallel docker workers (default: 4)")
     p.add_argument("--limit", type=int, default=None,
