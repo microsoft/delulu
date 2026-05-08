@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "delulu"
+version = "1.0.0"
+description = "A multilingual benchmark for code-completion hallucinations."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Mahdi Erfanian" },
+    { name = "Nelson Daniel Troncoso" },
+    { name = "Aashna Garg" },
+    { name = "Amabel Gale" },
+    { name = "Xiaoyu Liu" },
+    { name = "Pareesa Ameneh Golnari" },
+    { name = "Shengyu Fu" },
+]
+keywords = ["code", "llm", "hallucination", "benchmark", "fim", "evaluation"]
+
+dependencies = [
+    "pandas>=2.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.65",
+]
+
+[project.optional-dependencies]
+eval = [
+    "openai>=1.40",
+    "anthropic>=0.34",
+    "google-generativeai>=0.7",
+    "python-dotenv>=1.0",
+    "requests>=2.31",
+]
+hf = [
+    "datasets>=2.18",
+]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.5",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tools*"]
+
+[tool.ruff]
+line-length = 100

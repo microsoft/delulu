@@ -195,6 +195,22 @@ DocProject/Help/html
 # Click-Once directory
 publish/
 
+# ── Delulu repo additions ─────────────────────────────────────────────
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Eval / verification outputs (regenerated)
+evaluations/results/
+examples/results/
+*.log
+
 # Publish Web Output
 *.[Pp]ublish.xml
 *.azurePubxml

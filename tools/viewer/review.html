@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delulu Benchmark Review</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --green-bg: #12261e;
+    --green-text: #56d364;
+    --red-bg: #2d1215;
+    --red-text: #f85149;
+    --blue: #58a6ff;
+    --yellow: #d29922;
+    --purple: #bc8cff;
+    --orange: #db6d28;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ─────────────────────────────────── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header h1 { font-size: 18px; font-weight: 600; white-space: nowrap; }
+  .header h1 span { color: var(--text-muted); font-weight: 400; }
+
+  /* ── Buttons ────────────────────────────────── */
+  .btn {
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    background: #21262d;
+    white-space: nowrap;
+  }
+  .btn:hover { background: #30363d; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-green { background: #238636; border-color: #2ea043; }
+  .btn-green:hover { background: #2ea043; }
+  .btn-red { background: #6e2b2b; border-color: #8b3a3a; }
+  .btn-red:hover { background: #8b3a3a; }
+  .btn-blue { background: #1f6feb; border-color: #388bfd; }
+  .btn-blue:hover { background: #388bfd; }
+  .btn-orange { background: #6e4b1e; border-color: #db6d28; }
+  .btn-orange:hover { background: #7d5620; }
+
+  .spacer { flex: 1; }
+
+  /* ── Stats bar ──────────────────────────────── */
+  .stats-bar {
+    padding: 8px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+  .stat { display: flex; align-items: center; gap: 4px; }
+  .stat-val { font-weight: 600; }
+  .stat-label { color: var(--text-muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dot-green { background: var(--green-text); }
+  .dot-red { background: var(--red-text); }
+  .dot-yellow { background: var(--yellow); }
+  .dot-gray { background: var(--text-muted); }
+  .dot-orange { background: var(--orange); }
+
+  /* ── Filter bar ─────────────────────────────── */
+  .filter-bar {
+    padding: 8px 24px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-wrap: wrap;
+  }
+  .filter-bar label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .filter-select, .filter-input {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+  .filter-input { width: 180px; }
+
+  /* ── Layout ─────────────────────────────────── */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  /* ── Sidebar list ───────────────────────────── */
+  .sidebar {
+    width: 360px;
+    min-width: 280px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .sidebar-list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .sidebar-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: background 0.15s;
+  }
+  .sidebar-item:hover { background: #1c2128; }
+  .sidebar-item.active { background: #1f2937; border-left: 3px solid var(--blue); }
+  .sidebar-item-top { display: flex; align-items: center; gap: 8px; }
+  .sidebar-item-id {
+    font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+    font-size: 12px;
+    color: var(--blue);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+  }
+  .sidebar-item-badge {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .badge-pending { background: #30363d; color: var(--text-muted); }
+  .badge-accepted { background: var(--green-bg); color: var(--green-text); }
+  .badge-rejected { background: var(--red-bg); color: var(--red-text); }
+  .badge-edited { background: #2d2000; color: var(--yellow); }
+  .sidebar-item-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .lang-tag {
+    background: #21262d;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 500;
+  }
+  .meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .license-pill {
+    background: rgba(86,211,100,0.10);
+    border-color: rgba(86,211,100,0.3);
+    color: var(--green-text);
+  }
+  .repo-pill {
+    background: rgba(88,166,255,0.10);
+    border-color: rgba(88,166,255,0.3);
+    color: var(--blue);
+    text-decoration: none;
+    cursor: pointer;
+    max-width: 360px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .repo-pill:hover { background: rgba(88,166,255,0.18); }
+
+  /* ── Detail panel ───────────────────────────── */
+  .detail {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .detail-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+
+  .detail-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .detail-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+  }
+
+  .detail-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .detail-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .meta-item { display: flex; align-items: center; gap: 4px; }
+  .meta-item strong { color: var(--text); font-weight: 500; }
+
+  /* ── Code sections ──────────────────────────── */
+  .code-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .code-section-header {
+    padding: 8px 16px;
+    background: #1c2128;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .code-section-header .indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .code-block {
+    padding: 12px 16px;
+    font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: auto;
+    max-height: 50vh;
+    min-height: 40px;
+  }
+  .code-block.empty {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* ── Comparison view ────────────────────────── */
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 1200px) {
+    .comparison { grid-template-columns: 1fr; }
+  }
+
+  /* ── Editable hallucination ─────────────────── */
+  .edit-area {
+    width: 100%;
+    min-height: 80px;
+    background: #0d1117;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+    padding: 12px 16px;
+    resize: vertical;
+    border-radius: 0 0 8px 8px;
+  }
+  .edit-area:focus { outline: none; border-color: var(--blue); }
+
+  /* ── Error message ──────────────────────────── */
+  .error-box {
+    background: var(--red-bg);
+    border: 1px solid #5c2121;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--red-text);
+    font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+  }
+
+  /* ── Toast notification ─────────────────────── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 13px;
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .toast-success { border-color: var(--green-text); }
+  .toast-error { border-color: var(--red-text); }
+
+  /* ── Loading overlay ────────────────────────── */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+  }
+  .loading-overlay.show { display: flex; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Modal ──────────────────────────────────── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+  }
+  .modal h3 { font-size: 16px; margin-bottom: 12px; }
+  .modal p { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* ── Keyboard shortcuts ─────────────────────── */
+  .kbd {
+    background: #21262d;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+  .nav-counter {
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1>Delulu <span>Review</span></h1>
+  <input type="file" id="fileInput" accept=".csv" style="display:none">
+  <button class="btn" id="btnLoadCsv">📂 Open CSV</button>
+  <span class="file-name" id="fileName">No file loaded</span>
+  <span class="spacer"></span>
+  <span class="nav-counter" id="navCounter">-</span>
+  <button class="btn" id="btnPrev" disabled title="Previous (↑ or K)">&#9650; Prev</button>
+  <button class="btn" id="btnNext" disabled title="Next (↓ or J)">&#9660; Next</button>
+  <span style="color:var(--text-muted);font-size:12px">
+    <span class="kbd">A</span> Accept
+    <span class="kbd">R</span> Reject
+    <span class="kbd">E</span> Edit
+    <span class="kbd">J/K</span> Nav
+  </span>
+  <button class="btn" id="btnSave" disabled title="Save progress (Ctrl+S)">Save</button>
+  <button class="btn btn-blue" id="btnExport" disabled>Export CSV</button>
+</div>
+
+<!-- Stats -->
+<div class="stats-bar" id="statsBar">
+  <div class="stat"><span class="dot dot-gray"></span> <span class="stat-val" id="statTotal">0</span> <span class="stat-label">total</span></div>
+  <div class="stat"><span class="dot dot-green"></span> <span class="stat-val" id="statAccepted">0</span> <span class="stat-label">accepted</span></div>
+  <div class="stat"><span class="dot dot-red"></span> <span class="stat-val" id="statRejected">0</span> <span class="stat-label">rejected</span></div>
+  <div class="stat"><span class="dot dot-orange"></span> <span class="stat-val" id="statEdited">0</span> <span class="stat-label">edited</span></div>
+  <div class="stat"><span class="dot dot-yellow"></span> <span class="stat-val" id="statPending">0</span> <span class="stat-label">pending</span></div>
+  <div style="flex:1"></div>
+  <div class="stat"><span class="stat-label">Progress:</span> <span class="stat-val" id="statProgress">0%</span></div>
+</div>
+
+<!-- Filters -->
+<div class="filter-bar">
+  <label>Status:</label>
+  <select class="filter-select" id="filterStatus">
+    <option value="all">All</option>
+    <option value="pending">Pending</option>
+    <option value="accepted">Accepted</option>
+    <option value="rejected">Rejected</option>
+    <option value="edited">Edited</option>
+  </select>
+  <label>Language:</label>
+  <select class="filter-select" id="filterLang">
+    <option value="all">All</option>
+  </select>
+  <label>Type:</label>
+  <select class="filter-select" id="filterType">
+    <option value="all">All</option>
+  </select>
+  <label>Search:</label>
+  <input type="text" class="filter-input" id="filterSearch" placeholder="benchmark_id or content...">
+</div>
+
+<!-- Main layout -->
+<div class="main">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-list" id="sidebarList">
+      <div class="detail-empty">Load a CSV to begin review</div>
+    </div>
+  </div>
+
+  <!-- Detail panel -->
+  <div class="detail" id="detailPanel">
+    <div class="detail-empty">Select an item from the list to review</div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+</div>
+
+<!-- Export modal -->
+<div class="modal-backdrop" id="exportModal">
+  <div class="modal">
+    <h3>Export Reviewed CSV</h3>
+    <p>
+      This will download a CSV with <strong>accepted</strong> and <strong>is_hallucination_updated</strong> columns.
+      Edited hallucinations will replace the original values.
+    </p>
+    <div style="margin-bottom:16px">
+      <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px">Suggested filename:</label>
+      <input type="text" class="filter-input" id="exportFilename" style="width:100%" value="">
+    </div>
+    <div style="margin-bottom:16px;font-size:13px;color:var(--text-muted)">
+      <label><input type="checkbox" id="exportAcceptedOnly"> Export only accepted rows</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="exportCancel">Cancel</button>
+      <button class="btn btn-blue" id="exportConfirm">Download</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════════
+let rows = [];
+let filteredRows = [];
+let reviewData = {};   // { benchmark_id: { status, edited_hallucination } }
+let currentFilename = null;
+let selectedIndex = -1;
+let dirty = false;
+
+// ═══════════════════════════════════════════════════════
+// DOM refs
+// ═══════════════════════════════════════════════════════
+const $sidebarList = document.getElementById('sidebarList');
+const $detailPanel = document.getElementById('detailPanel');
+const $fileName = document.getElementById('fileName');
+const $navCounter = document.getElementById('navCounter');
+const $toast = document.getElementById('toast');
+const $loading = document.getElementById('loading');
+
+// ═══════════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════════
+function showLoading(v) { $loading.classList.toggle('show', v); }
+
+function toast(msg, type='success') {
+  $toast.textContent = msg;
+  $toast.className = 'toast show toast-' + type;
+  setTimeout(() => $toast.classList.remove('show'), 3000);
+}
+
+// localStorage key for persisting review state per CSV filename
+function reviewStorageKey(filename) {
+  return 'delulu-review:' + filename;
+}
+
+function loadReviewFromStorage(filename) {
+  try {
+    const raw = localStorage.getItem(reviewStorageKey(filename));
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function persistReviewToStorage() {
+  if (!currentFilename) return false;
+  try {
+    localStorage.setItem(
+      reviewStorageKey(currentFilename),
+      JSON.stringify(reviewData));
+    return true;
+  } catch (e) {
+    toast('Save failed: ' + e.message, 'error');
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// Load CSV (client-side, via file picker)
+// ═══════════════════════════════════════════════════════
+document.getElementById('btnLoadCsv').addEventListener('click', () => {
+  document.getElementById('fileInput').click();
+});
+
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  loadCsvFromFile(file);
+  // Allow re-selecting the same file later
+  e.target.value = '';
+});
+
+function loadCsvFromFile(file) {
+  showLoading(true);
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: results => {
+      try {
+        rows = results.data || [];
+        currentFilename = file.name;
+        $fileName.textContent = file.name;
+        document.getElementById('exportFilename').value =
+          file.name.replace(/\.csv$/i, '_reviewed.csv');
+
+        reviewData = loadReviewFromStorage(file.name);
+
+        populateFilters();
+        applyFilters();
+        updateStats();
+        enableButtons(true);
+        dirty = false;
+
+        if (filteredRows.length > 0) selectItem(0);
+        toast(`Loaded ${rows.length} rows from ${file.name}`);
+      } catch (e) {
+        toast('Failed to load CSV: ' + e.message, 'error');
+      } finally {
+        showLoading(false);
+      }
+    },
+    error: err => {
+      showLoading(false);
+      toast('Failed to parse CSV: ' + err.message, 'error');
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// Filters
+// ═══════════════════════════════════════════════════════
+function populateFilters() {
+  const langs = new Set(), types = new Set();
+  rows.forEach(r => {
+    if (r.language) langs.add(r.language);
+    if (r.hallucination_type) types.add(r.hallucination_type);
+  });
+  fillSelect('filterLang', [...langs].sort());
+  fillSelect('filterType', [...types].sort());
+}
+
+function fillSelect(id, values) {
+  const el = document.getElementById(id);
+  const cur = el.value;
+  el.innerHTML = '<option value="all">All</option>';
+  values.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    el.appendChild(o);
+  });
+  el.value = cur || 'all';
+}
+
+function getReviewStatus(bid) {
+  const r = reviewData[bid];
+  if (!r || !r.status) return 'pending';
+  return r.status;
+}
+
+function applyFilters() {
+  const status = document.getElementById('filterStatus').value;
+  const lang = document.getElementById('filterLang').value;
+  const type = document.getElementById('filterType').value;
+  const search = document.getElementById('filterSearch').value.toLowerCase();
+
+  filteredRows = rows.filter(r => {
+    if (status !== 'all') {
+      const s = getReviewStatus(r.benchmark_id);
+      if (status === 'edited') {
+        if (s !== 'accepted' || !reviewData[r.benchmark_id]?.edited_hallucination) return false;
+      } else if (s !== status) return false;
+    }
+    if (lang !== 'all' && r.language !== lang) return false;
+    if (type !== 'all' && r.hallucination_type !== type) return false;
+    if (search) {
+      const hay = (r.benchmark_id + ' ' + r.hallucinated_completion + ' ' + r.golden_completion + ' ' + r.error_message).toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  renderSidebar();
+  if (filteredRows.length > 0) {
+    selectItem(Math.min(selectedIndex, filteredRows.length - 1));
+  } else {
+    selectedIndex = -1;
+    $detailPanel.innerHTML = '<div class="detail-empty">No items match filters</div>';
+    $navCounter.textContent = '0 / 0';
+  }
+}
+
+['filterStatus', 'filterLang', 'filterType'].forEach(id =>
+  document.getElementById(id).addEventListener('change', applyFilters));
+document.getElementById('filterSearch').addEventListener('input',
+  debounce(applyFilters, 200));
+
+function debounce(fn, ms) {
+  let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+}
+
+// ═══════════════════════════════════════════════════════
+// Sidebar
+// ═══════════════════════════════════════════════════════
+function renderSidebar() {
+  $sidebarList.innerHTML = '';
+  filteredRows.forEach((r, i) => {
+    const status = getReviewStatus(r.benchmark_id);
+    const hasEdit = reviewData[r.benchmark_id]?.edited_hallucination != null;
+    const div = document.createElement('div');
+    div.className = 'sidebar-item' + (i === selectedIndex ? ' active' : '');
+    div.dataset.index = i;
+
+    let badgeClass = 'badge-pending', badgeText = 'pending';
+    if (status === 'accepted' && hasEdit) {
+      badgeClass = 'badge-edited'; badgeText = 'edited';
+    } else if (status === 'accepted') {
+      badgeClass = 'badge-accepted'; badgeText = 'accepted';
+    } else if (status === 'rejected') {
+      badgeClass = 'badge-rejected'; badgeText = 'rejected';
+    }
+
+    div.innerHTML = `
+      <div class="sidebar-item-top">
+        <span class="sidebar-item-id">${esc(r.benchmark_id)}</span>
+        <span class="sidebar-item-badge ${badgeClass}">${badgeText}</span>
+      </div>
+      <div class="sidebar-item-meta">
+        <span class="lang-tag">${esc(r.language || '?')}</span>
+        <span>${esc(r.hallucination_type || '?')}</span>
+        <span style="color:var(--text-muted)">${esc(truncate(r.file_path, 30))}</span>
+      </div>
+    `;
+    div.addEventListener('click', () => selectItem(i));
+    $sidebarList.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// Detail Panel
+// ═══════════════════════════════════════════════════════
+function selectItem(index) {
+  if (index < 0 || index >= filteredRows.length) return;
+
+  // Save any pending edit from previous selection
+  saveCurrentEdit();
+
+  selectedIndex = index;
+  const row = filteredRows[index];
+  const bid = row.benchmark_id;
+  const review = reviewData[bid] || {};
+  const status = review.status || 'pending';
+  const editedHall = review.edited_hallucination;
+  const hallText = editedHall != null ? editedHall : (row.hallucinated_completion || '');
+
+  $navCounter.textContent = `${index + 1} / ${filteredRows.length}`;
+
+  // Update sidebar active state
+  $sidebarList.querySelectorAll('.sidebar-item').forEach((el, i) =>
+    el.classList.toggle('active', i === index));
+
+  // Scroll sidebar item into view
+  const activeEl = $sidebarList.querySelector('.sidebar-item.active');
+  if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+
+  const statusBtns = `
+    <button class="btn btn-green ${status==='accepted'?'':'btn'}" onclick="setStatus('accepted')" title="Accept (A)">
+      &#10003; Accept
+    </button>
+    <button class="btn btn-red ${status==='rejected'?'':'btn'}" onclick="setStatus('rejected')" title="Reject (R)">
+      &#10007; Reject
+    </button>
+    <button class="btn btn-orange" onclick="toggleEdit()" title="Edit hallucination (E)">
+      &#9998; Edit
+    </button>
+    <button class="btn" onclick="resetStatus()" title="Reset to pending">
+      Reset
+    </button>
+  `;
+
+  $detailPanel.innerHTML = `
+    <div class="detail-header">
+      <h2>${esc(bid)}</h2>
+    </div>
+
+    <div class="detail-actions" id="statusActions">
+      ${statusBtns}
+      <span style="font-size:12px;color:var(--text-muted);align-self:center;">
+        Status: <strong style="color:${statusColor(status)}">${status.toUpperCase()}</strong>
+        ${editedHall != null ? ' <span style="color:var(--orange)">(edited)</span>' : ''}
+      </span>
+    </div>
+
+    <div class="detail-meta">
+      <div class="meta-item"><strong>Language:</strong> <span class="lang-tag">${esc(row.language)}</span></div>
+      <div class="meta-item"><strong>Type:</strong> ${esc(row.hallucination_type)}</div>
+      <div class="meta-item"><strong>File:</strong> ${esc(row.file_path)}</div>
+      ${(row.license || '').trim() ? `<div class="meta-item"><strong>License:</strong> <span class="meta-pill license-pill">📜 ${esc(row.license)}</span></div>` : ''}
+      ${(row.repo_url || '').trim() ? `<div class="meta-item"><strong>Repo:</strong> <a class="meta-pill repo-pill" href="${esc(row.repo_url)}" target="_blank" rel="noopener noreferrer" title="${esc(row.repo_url)}">🔗 ${esc(row.repo_url.replace(/^https?:\/\/(www\.)?github\.com\//, ''))}</a></div>` : ''}
+    </div>
+
+    <!-- Prompt / Suffix context -->
+    ${renderContextSection('Prompt (context before)', row.prompt, 'var(--blue)')}
+
+    ${renderContextSection('Suffix (context after)', row.suffix, 'var(--text-muted)')}
+
+    <!-- Golden vs Hallucinated comparison -->
+    <div class="comparison">
+      <div class="code-section">
+        <div class="code-section-header"><span class="indicator" style="background:var(--green-text)"></span> Golden Completion</div>
+        <div class="code-block" style="background:var(--green-bg);color:var(--green-text)">${esc(row.golden_completion || '')}</div>
+      </div>
+      <div class="code-section">
+        <div class="code-section-header">
+          <span class="indicator" style="background:var(--red-text)"></span> Hallucinated Completion
+          ${editedHall != null ? '<span style="color:var(--orange);font-size:11px;font-weight:400">(edited)</span>' : ''}
+        </div>
+        <div class="code-block" style="background:var(--red-bg);color:var(--red-text)" id="hallBlock">${esc(hallText)}</div>
+      </div>
+    </div>
+
+    <!-- Edit area (hidden by default) -->
+    <div id="editSection" style="display:none">
+      <div class="code-section">
+        <div class="code-section-header"><span class="indicator" style="background:var(--orange)"></span> Edit Hallucinated Completion</div>
+        <textarea class="edit-area" id="editArea" rows="6">${escAttr(hallText)}</textarea>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button class="btn btn-green" onclick="applyEdit()">Apply Edit &amp; Accept</button>
+        <button class="btn" onclick="cancelEdit()">Cancel</button>
+        <button class="btn btn-red" onclick="revertEdit()" ${editedHall == null ? 'disabled' : ''}>Revert to Original</button>
+      </div>
+    </div>
+
+    <!-- Error message -->
+    ${row.error_message ? `
+    <div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:var(--red-text)">Expected Error Message</div>
+      <div class="error-box">${esc(row.error_message)}</div>
+    </div>` : ''}
+  `;
+
+  enableButtons(true);
+
+  // Scroll detail panel to top
+  $detailPanel.scrollTop = 0;
+}
+
+function statusColor(s) {
+  if (s === 'accepted') return 'var(--green-text)';
+  if (s === 'rejected') return 'var(--red-text)';
+  return 'var(--yellow)';
+}
+
+function renderContextSection(title, value, indicatorColor) {
+  const raw = value == null ? '' : String(value);
+  const isEmpty = raw.trim().length === 0;
+  const lineCount = raw ? raw.split('\n').length : 0;
+  const charCount = raw.length;
+  const meta = isEmpty
+    ? '<span style="color:var(--text-muted);font-size:11px;font-weight:400">(empty)</span>'
+    : `<span style="color:var(--text-muted);font-size:11px;font-weight:400">${lineCount} line${lineCount===1?'':'s'} · ${charCount} char${charCount===1?'':'s'}</span>`;
+  const body = isEmpty
+    ? '<div class="code-block empty">(empty)</div>'
+    : `<div class="code-block">${esc(raw)}</div>`;
+  return `
+    <div class="code-section">
+      <div class="code-section-header"><span class="indicator" style="background:${indicatorColor}"></span> ${esc(title)} ${meta}</div>
+      ${body}
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// Review actions
+// ═══════════════════════════════════════════════════════
+function setStatus(status) {
+  if (selectedIndex < 0) return;
+  const bid = filteredRows[selectedIndex].benchmark_id;
+  if (!reviewData[bid]) reviewData[bid] = {};
+  reviewData[bid].status = status;
+  dirty = true;
+  updateStats();
+  renderSidebar();
+  autoSave();
+  // Auto-advance to next item
+  if (selectedIndex < filteredRows.length - 1) {
+    selectItem(selectedIndex + 1);
+  } else {
+    refreshCurrent();
+  }
+}
+
+function resetStatus() {
+  if (selectedIndex < 0) return;
+  const bid = filteredRows[selectedIndex].benchmark_id;
+  delete reviewData[bid];
+  dirty = true;
+  updateStats();
+  refreshCurrent();
+  autoSave();
+}
+
+function toggleEdit() {
+  const sec = document.getElementById('editSection');
+  if (!sec) return;
+  const showing = sec.style.display !== 'none';
+  sec.style.display = showing ? 'none' : 'block';
+  if (!showing) {
+    document.getElementById('editArea').focus();
+  }
+}
+
+function applyEdit() {
+  if (selectedIndex < 0) return;
+  const bid = filteredRows[selectedIndex].benchmark_id;
+  const text = document.getElementById('editArea').value;
+  if (!reviewData[bid]) reviewData[bid] = {};
+  reviewData[bid].edited_hallucination = text;
+  reviewData[bid].status = 'accepted';
+  dirty = true;
+  updateStats();
+  renderSidebar();
+  autoSave();
+  // Auto-advance to next item
+  if (selectedIndex < filteredRows.length - 1) {
+    selectItem(selectedIndex + 1);
+  } else {
+    refreshCurrent();
+  }
+}
+
+function cancelEdit() {
+  const sec = document.getElementById('editSection');
+  if (sec) sec.style.display = 'none';
+}
+
+function revertEdit() {
+  if (selectedIndex < 0) return;
+  const bid = filteredRows[selectedIndex].benchmark_id;
+  if (reviewData[bid]) {
+    delete reviewData[bid].edited_hallucination;
+  }
+  dirty = true;
+  updateStats();
+  refreshCurrent();
+  autoSave();
+}
+
+function saveCurrentEdit() {
+  // If edit area is open, save the current text silently
+  const editArea = document.getElementById('editArea');
+  const editSection = document.getElementById('editSection');
+  if (editArea && editSection && editSection.style.display !== 'none' && selectedIndex >= 0) {
+    const bid = filteredRows[selectedIndex].benchmark_id;
+    const origHall = filteredRows[selectedIndex].hallucinated_completion || '';
+    const text = editArea.value;
+    if (text !== origHall) {
+      if (!reviewData[bid]) reviewData[bid] = {};
+      reviewData[bid].edited_hallucination = text;
+      dirty = true;
+    }
+  }
+}
+
+function refreshCurrent() {
+  renderSidebar();
+  if (selectedIndex >= 0 && selectedIndex < filteredRows.length) {
+    selectItem(selectedIndex);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// Stats
+// ═══════════════════════════════════════════════════════
+function updateStats() {
+  let accepted = 0, rejected = 0, edited = 0, pending = 0;
+  rows.forEach(r => {
+    const rev = reviewData[r.benchmark_id];
+    if (!rev || !rev.status) { pending++; return; }
+    if (rev.status === 'accepted') {
+      accepted++;
+      if (rev.edited_hallucination != null) edited++;
+    }
+    else if (rev.status === 'rejected') rejected++;
+    else pending++;
+  });
+  document.getElementById('statTotal').textContent = rows.length;
+  document.getElementById('statAccepted').textContent = accepted;
+  document.getElementById('statRejected').textContent = rejected;
+  document.getElementById('statEdited').textContent = edited;
+  document.getElementById('statPending').textContent = pending;
+
+  const reviewed = accepted + rejected;
+  const pct = rows.length > 0 ? Math.round(reviewed / rows.length * 100) : 0;
+  document.getElementById('statProgress').textContent = pct + '%';
+}
+
+// ═══════════════════════════════════════════════════════
+// Save (localStorage) / Export (browser download)
+// ═══════════════════════════════════════════════════════
+let autoSaveTimer = null;
+function autoSave() {
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => saveReview(true), 2000);
+}
+
+function saveReview(silent = false) {
+  if (!currentFilename) return;
+  saveCurrentEdit();
+  if (persistReviewToStorage()) {
+    dirty = false;
+    if (!silent) toast('Saved to browser storage');
+  }
+}
+
+document.getElementById('btnSave').addEventListener('click', () => saveReview(false));
+
+// Export
+document.getElementById('btnExport').addEventListener('click', () => {
+  document.getElementById('exportModal').classList.add('show');
+});
+document.getElementById('exportCancel').addEventListener('click', () => {
+  document.getElementById('exportModal').classList.remove('show');
+});
+document.getElementById('exportConfirm').addEventListener('click', () => {
+  document.getElementById('exportModal').classList.remove('show');
+  showLoading(true);
+  // Defer so the spinner gets a chance to render before the heavy work
+  setTimeout(() => {
+    try {
+      saveCurrentEdit();
+      const exportName = document.getElementById('exportFilename').value
+        || (currentFilename || 'reviewed').replace(/\.csv$/i, '_reviewed.csv');
+      const acceptedOnly = document.getElementById('exportAcceptedOnly').checked;
+      const stats = downloadReviewedCsv(exportName, acceptedOnly);
+      toast(
+        `Downloaded ${stats.filename}: ${stats.accepted} accepted, ` +
+        `${stats.rejected} rejected, ${stats.edited} edited`);
+    } catch (e) {
+      toast('Export error: ' + e.message, 'error');
+    } finally {
+      showLoading(false);
+    }
+  }, 50);
+});
+
+function downloadReviewedCsv(exportName, acceptedOnly) {
+  // Determine column order: original headers + extras (preserving order)
+  const baseFields = rows.length > 0 ? Object.keys(rows[0]) : [];
+  const extraCols = ['accepted', 'is_hallucination_updated'];
+  const fieldnames = baseFields.slice();
+  extraCols.forEach(c => { if (!fieldnames.includes(c)) fieldnames.push(c); });
+
+  let acceptedCount = 0, rejectedCount = 0, editedCount = 0;
+  const exportedRows = [];
+
+  for (const row of rows) {
+    const bid = row.benchmark_id || '';
+    const review = reviewData[bid] || {};
+    const status = review.status || 'pending';
+    const isAccepted = status === 'accepted';
+
+    if (acceptedOnly && !isAccepted) continue;
+
+    const out = { ...row };
+    out.accepted = isAccepted ? 'true' : 'false';
+
+    const edited = review.edited_hallucination;
+    const origHall = row.hallucinated_completion || '';
+    if (edited != null && edited !== origHall) {
+      out.hallucinated_completion = edited;
+      out.is_hallucination_updated = 'true';
+      editedCount++;
+    } else {
+      out.is_hallucination_updated = 'false';
+    }
+
+    if (isAccepted) acceptedCount++;
+    else if (status === 'rejected') rejectedCount++;
+
+    exportedRows.push(out);
+  }
+
+  // Build CSV using PapaParse for correct quoting/escaping
+  const csv = Papa.unparse(exportedRows, { columns: fieldnames });
+  // Prepend UTF-8 BOM so Excel opens UTF-8 cleanly
+  const blob = new Blob(['\ufeff', csv], {
+    type: 'text/csv;charset=utf-8;'
+  });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = exportName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+  return {
+    filename: exportName,
+    accepted: acceptedCount,
+    rejected: rejectedCount,
+    edited: editedCount,
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// Navigation
+// ═══════════════════════════════════════════════════════
+document.getElementById('btnPrev').addEventListener('click', () => navigatePrev());
+document.getElementById('btnNext').addEventListener('click', () => navigateNext());
+
+function navigatePrev() {
+  if (selectedIndex > 0) selectItem(selectedIndex - 1);
+}
+function navigateNext() {
+  if (selectedIndex < filteredRows.length - 1) selectItem(selectedIndex + 1);
+}
+
+// ═══════════════════════════════════════════════════════
+// Keyboard shortcuts
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown', (e) => {
+  // Don't capture if typing in an input/textarea
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+    if (e.key === 'Escape') {
+      e.target.blur();
+      cancelEdit();
+    }
+    if (e.ctrlKey && e.key === 's') {
+      e.preventDefault();
+      saveReview(false);
+    }
+    return;
+  }
+
+  if (e.ctrlKey && e.key === 's') {
+    e.preventDefault();
+    saveReview(false);
+    return;
+  }
+
+  switch (e.key) {
+    case 'j': case 'ArrowDown':
+      e.preventDefault(); navigateNext(); break;
+    case 'k': case 'ArrowUp':
+      e.preventDefault(); navigatePrev(); break;
+    case 'a': case 'A':
+      e.preventDefault(); setStatus('accepted'); break;
+    case 'r':
+      e.preventDefault(); setStatus('rejected'); break;
+    case 'e':
+      e.preventDefault(); toggleEdit(); break;
+    case 'Escape':
+      cancelEdit(); break;
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// Button enable/disable
+// ═══════════════════════════════════════════════════════
+function enableButtons(v) {
+  document.getElementById('btnPrev').disabled = !v;
+  document.getElementById('btnNext').disabled = !v;
+  document.getElementById('btnSave').disabled = !v;
+  document.getElementById('btnExport').disabled = !v;
+}
+
+// ═══════════════════════════════════════════════════════
+// Util
+// ═══════════════════════════════════════════════════════
+function esc(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  // For textarea content, we just need basic escaping
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function truncate(s, n) {
+  if (!s) return '';
+  return s.length > n ? '...' + s.slice(-n) : s;
+}
+
+// ═══════════════════════════════════════════════════════
+// Warn on leave if dirty
+// ═══════════════════════════════════════════════════════
+window.addEventListener('beforeunload', (e) => {
+  if (dirty) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+</script>
+</body>
+</html>

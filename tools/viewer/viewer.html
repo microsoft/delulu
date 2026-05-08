@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delulu Benchmark Viewer</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --green-bg: #12261e;
+    --green-text: #56d364;
+    --red-bg: #2d1215;
+    --red-text: #f85149;
+    --blue: #58a6ff;
+    --yellow: #d29922;
+    --purple: #bc8cff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Header ─────────────────────────────────── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header h1 { font-size: 18px; font-weight: 600; }
+  .header h1 span { color: var(--text-muted); font-weight: 400; }
+  .file-picker-btn {
+    background: #21262d;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .file-picker-btn:hover { background: #30363d; }
+  .file-name { color: var(--text-muted); font-size: 13px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .spacer { flex: 1; }
+  .kbd {
+    background: #21262d;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* ── Filter bar ─────────────────────────────── */
+  .filter-bar {
+    padding: 8px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .filter-bar label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-right: 2px; }
+  .filter-select {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+  .filter-select:focus { outline: none; border-color: var(--blue); }
+  .filter-search {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    width: 200px;
+  }
+  .filter-search:focus { outline: none; border-color: var(--blue); }
+  .filter-count { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+
+  /* ── Nav bar ────────────────────────────────── */
+  .nav-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    top: 53px;
+    z-index: 99;
+  }
+  .nav-btn {
+    background: #21262d;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .nav-btn:hover:not(:disabled) { background: #30363d; }
+  .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .nav-btn svg { width: 14px; height: 14px; fill: currentColor; }
+  .row-counter { font-size: 13px; color: var(--text-muted); min-width: 90px; text-align: center; font-variant-numeric: tabular-nums; }
+  .jump-input {
+    width: 60px;
+    background: #0d1117;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    text-align: center;
+  }
+  .jump-input:focus { outline: none; border-color: var(--blue); }
+
+  /* ── Stats ──────────────────────────────────── */
+  .stats-row {
+    display: flex;
+    gap: 10px;
+    padding: 12px 24px;
+    flex-wrap: wrap;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    min-width: 100px;
+  }
+  .stat-card .value { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat-card .label { color: var(--text-muted); margin-top: 2px; }
+
+  /* ── Meta bar ───────────────────────────────── */
+  .meta-bar {
+    padding: 10px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .badge.lang { background: rgba(88,166,255,0.15); border-color: rgba(88,166,255,0.3); color: var(--blue); }
+  .badge.haltype { background: rgba(210,153,34,0.15); border-color: rgba(210,153,34,0.4); color: var(--yellow); }
+  .badge.id-badge { background: rgba(188,140,255,0.12); border-color: rgba(188,140,255,0.3); color: var(--purple); font-family: 'SF Mono',SFMono-Regular,Consolas,monospace; font-size: 11px; }
+  .badge.license { background: rgba(86,211,100,0.10); border-color: rgba(86,211,100,0.3); color: var(--green-text); }
+  .badge.repo-link {
+    background: rgba(88,166,255,0.10);
+    border-color: rgba(88,166,255,0.3);
+    color: var(--blue);
+    text-decoration: none;
+    cursor: pointer;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-flex;
+  }
+  .badge.repo-link:hover { background: rgba(88,166,255,0.18); }
+  .filepath {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 550px;
+  }
+  .copy-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+  .copy-btn:hover { color: var(--text); background: #21262d; }
+
+  /* ── Code viewer ────────────────────────────── */
+  .code-container { max-width: 1200px; margin: 16px auto; padding: 0 24px; }
+  .diff-panel { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+  .diff-header {
+    background: var(--surface);
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .code-block {
+    overflow-x: auto;
+    font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+    line-height: 20px;
+    counter-reset: line-num;
+  }
+  .code-line { display: flex; min-height: 20px; counter-increment: line-num; }
+  .code-line:hover { filter: brightness(1.15); }
+  .line-no { width: 50px; min-width: 50px; text-align: right; padding-right: 12px; color: var(--text-muted); user-select: none; opacity: 0.5; font-size: 12px; }
+  .line-no::before { content: counter(line-num); }
+  .line-marker { width: 20px; min-width: 20px; text-align: center; user-select: none; font-weight: 700; font-size: 12px; }
+  .line-content { flex: 1; padding-right: 16px; white-space: pre; tab-size: 4; }
+
+  .code-line.ctx { background: var(--bg); }
+  .code-line.ctx .line-no { color: var(--text-muted); }
+  .code-line.ctx .line-marker { color: transparent; }
+  .code-line.ctx .line-content { color: var(--text-muted); }
+
+  .code-line.add { background: var(--green-bg); }
+  .code-line.add .line-no { color: var(--green-text); opacity: 0.6; }
+  .code-line.add .line-marker { color: var(--green-text); }
+  .code-line.add .line-content { color: var(--text); }
+
+  .code-line.del { background: var(--red-bg); }
+  .code-line.del .line-no { color: var(--red-text); opacity: 0.6; }
+  .code-line.del .line-marker { color: var(--red-text); }
+  .code-line.del .line-content { color: var(--text); }
+
+  .section-divider {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 4px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    gap: 8px;
+    user-select: none;
+  }
+  .section-divider.golden { color: var(--green-text); }
+  .section-divider.hallucinated { color: var(--red-text); }
+  .section-divider .line-expand { flex: 1; height: 1px; background: var(--border); }
+  .section-divider.expandable { cursor: pointer; transition: background 0.15s; }
+  .section-divider.expandable:hover { background: #1c2128; color: var(--blue); }
+
+  /* ── Error panel ────────────────────────────── */
+  .error-panel {
+    border: 1px solid rgba(248,81,73,0.3);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .error-panel .error-header {
+    background: rgba(248,81,73,0.06);
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(248,81,73,0.2);
+    color: var(--red-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .error-panel .error-body {
+    padding: 12px 16px;
+    font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+    line-height: 18px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 300px;
+    overflow-y: auto;
+    color: var(--text);
+    background: var(--bg);
+  }
+
+  /* ── Image tag bar ──────────────────────────── */
+  .image-bar {
+    padding: 6px 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(188,140,255,0.03);
+    font-size: 12px;
+  }
+  .image-bar code {
+    font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+    font-size: 11px;
+    color: var(--purple);
+    background: rgba(188,140,255,0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(188,140,255,0.2);
+  }
+  .image-bar .label { color: var(--text-muted); }
+
+  /* ── Empty state ────────────────────────────── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 24px;
+    text-align: center;
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.6; }
+  .empty-state h2 { font-size: 20px; margin-bottom: 8px; }
+  .empty-state p { color: var(--text-muted); font-size: 14px; max-width: 420px; }
+  .empty-state code { background: #21262d; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+
+  /* ── Docker Tools Panel ─────────────────── */
+  .docker-panel {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    background: var(--surface);
+  }
+  .docker-panel-header {
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .docker-status-badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+  }
+  .docker-status-badge.checking { background: rgba(139,148,158,0.15); color: var(--text-muted); }
+  .docker-status-badge.available { background: rgba(86,211,100,0.15); color: var(--green-text); }
+  .docker-status-badge.unavailable { background: rgba(248,81,73,0.15); color: var(--red-text); }
+  .docker-panel-body { padding: 14px 16px; }
+  .docker-section { margin-bottom: 14px; }
+  .docker-section:last-child { margin-bottom: 0; }
+  .docker-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .docker-pull-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .docker-image-ref {
+    font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+    font-size: 11px;
+    color: var(--purple);
+    background: rgba(188,140,255,0.08);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(188,140,255,0.2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 480px;
+  }
+  .docker-pull-status { font-size: 12px; display: flex; align-items: center; gap: 4px; }
+  .docker-pull-status.pulled { color: var(--green-text); }
+  .docker-pull-status.not-pulled { color: var(--text-muted); }
+  .docker-pull-status.error { color: var(--red-text); font-size: 11px; }
+  .docker-btn {
+    background: #21262d;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .docker-btn:hover:not(:disabled) { background: #30363d; }
+  .docker-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .docker-btn-green { border-color: rgba(86,211,100,0.3); background: rgba(86,211,100,0.08); }
+  .docker-btn-green:hover:not(:disabled) { background: rgba(86,211,100,0.18); }
+  .docker-btn-red { border-color: rgba(248,81,73,0.3); background: rgba(248,81,73,0.08); }
+  .docker-btn-red:hover:not(:disabled) { background: rgba(248,81,73,0.18); }
+  .docker-btn-blue { border-color: rgba(88,166,255,0.3); background: rgba(88,166,255,0.08); }
+  .docker-btn-blue:hover:not(:disabled) { background: rgba(88,166,255,0.18); }
+  .docker-btn .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .docker-progress {
+    margin-top: 8px;
+    border-radius: 4px;
+    background: #21262d;
+    height: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .docker-progress-fill {
+    position: absolute;
+    top: 0; left: -30%;
+    height: 100%; width: 30%;
+    background: var(--blue);
+    border-radius: 4px;
+    animation: progress-slide 1.4s ease-in-out infinite;
+  }
+  @keyframes progress-slide { 0% { left: -30%; } 100% { left: 100%; } }
+  .docker-progress-text {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    display: block;
+  }
+  .docker-verify-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .docker-textarea {
+    width: 100%;
+    min-height: 120px;
+    max-height: 350px;
+    resize: vertical;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+    line-height: 18px;
+    padding: 10px 12px;
+    tab-size: 4;
+    margin-bottom: 8px;
+  }
+  .docker-textarea:focus { outline: none; border-color: var(--blue); }
+  .docker-textarea::placeholder { color: var(--text-muted); opacity: 0.5; }
+  .docker-result {
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .docker-result-header {
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .docker-result-header.pass {
+    background: rgba(86,211,100,0.08);
+    color: var(--green-text);
+    border-bottom: 1px solid rgba(86,211,100,0.2);
+  }
+  .docker-result-header.fail {
+    background: rgba(248,81,73,0.08);
+    color: var(--red-text);
+    border-bottom: 1px solid rgba(248,81,73,0.2);
+  }
+  .docker-result-header.err {
+    background: rgba(210,153,34,0.08);
+    color: var(--yellow);
+    border-bottom: 1px solid rgba(210,153,34,0.2);
+  }
+  .docker-result-body {
+    padding: 10px 12px;
+    font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+    font-size: 11px;
+    line-height: 18px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 350px;
+    overflow-y: auto;
+    background: var(--bg);
+    color: var(--text-muted);
+  }
+  .docker-notice {
+    padding: 10px 14px;
+    background: rgba(139,148,158,0.06);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .docker-notice code { background: #21262d; padding: 1px 6px; border-radius: 3px; font-size: 11px; }
+  .docker-sep { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔬 Delulu <span>/ Benchmark Viewer</span></h1>
+  <input type="file" id="fileInput" accept=".csv" style="display:none">
+  <button class="file-picker-btn" onclick="document.getElementById('fileInput').click()">📂 Open CSV</button>
+  <span class="file-name" id="fileName">No file loaded</span>
+  <div class="spacer"></div>
+  <span style="font-size:12px;color:var(--text-muted)">
+    <span class="kbd">←</span> <span class="kbd">→</span> navigate
+    <span class="kbd">F</span> search
+  </span>
+</div>
+
+<div class="filter-bar" id="filterBar" style="display:none">
+  <label>Language:</label>
+  <select class="filter-select" id="filterLang"><option value="">All</option></select>
+  <label style="margin-left:10px">Type:</label>
+  <select class="filter-select" id="filterHalType"><option value="">All</option></select>
+  <label style="margin-left:10px">Search:</label>
+  <input type="text" class="filter-search" id="filterSearch" placeholder="file path, benchmark_id...">
+  <span class="filter-count" id="filterCount"></span>
+</div>
+
+<div class="nav-bar" id="navBar" style="display:none">
+  <button class="nav-btn" id="btnFirst" onclick="goFirst()">
+    <svg viewBox="0 0 16 16"><path d="M2 2v12h1.5V2H2zm4.5 6l6 4.5V3.5l-6 4.5z"/></svg>
+  </button>
+  <button class="nav-btn" id="btnPrev" onclick="goPrev()">
+    <svg viewBox="0 0 16 16"><path d="M10.5 3.5L4.5 8l6 4.5v-9z"/></svg> Prev
+  </button>
+  <span class="row-counter" id="rowCounter">0 / 0</span>
+  <button class="nav-btn" id="btnNext" onclick="goNext()">
+    Next <svg viewBox="0 0 16 16"><path d="M5.5 3.5L11.5 8l-6 4.5v-9z"/></svg>
+  </button>
+  <button class="nav-btn" id="btnLast" onclick="goLast()">
+    <svg viewBox="0 0 16 16"><path d="M12.5 2v12H14V2h-1.5zM3.5 3.5v9l6-4.5-6-4.5z"/></svg>
+  </button>
+  <span style="color:var(--text-muted);font-size:12px;margin-left:4px">Go to:</span>
+  <input type="number" class="jump-input" id="jumpInput" min="1" placeholder="#"
+         onkeydown="if(event.key==='Enter')jumpTo()">
+</div>
+
+<div class="stats-row" id="statsRow" style="display:none"></div>
+
+<div id="mainContent">
+  <div class="empty-state">
+    <div class="icon">🔬</div>
+    <h2>Delulu Benchmark Viewer</h2>
+    <p>Load a benchmark CSV file (<code>delulu_final.csv</code>) to browse all verified hallucination benchmarks with full code diffs and error details.</p>
+  </div>
+</div>
+
+<script>
+let allRows = [];
+let filteredRows = [];
+let currentIdx = 0;
+let _hiddenChunks = [];
+let dockerAvailable = null;
+let pulledImages = new Set();
+let currentDockerImage = '';
+
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('fileName').textContent = file.name;
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: results => {
+      allRows = results.data;
+      buildFilters();
+      applyFilters();
+      document.getElementById('filterBar').style.display = 'flex';
+      document.getElementById('navBar').style.display = 'flex';
+      document.getElementById('statsRow').style.display = 'flex';
+    }
+  });
+});
+
+// ── Filters ────────────────────────────────────────
+function buildFilters() {
+  const langSet = new Set(allRows.map(r => r.language).filter(Boolean));
+  const langSel = document.getElementById('filterLang');
+  langSel.innerHTML = '<option value="">All</option>';
+  [...langSet].sort().forEach(l => langSel.innerHTML += `<option value="${esc(l)}">${esc(l)} (${allRows.filter(r=>r.language===l).length})</option>`);
+
+  const htSet = new Set(allRows.map(r => r.hallucination_type).filter(Boolean));
+  const htSel = document.getElementById('filterHalType');
+  htSel.innerHTML = '<option value="">All</option>';
+  [...htSet].sort().forEach(t => htSel.innerHTML += `<option value="${esc(t)}">${esc(t)} (${allRows.filter(r=>r.hallucination_type===t).length})</option>`);
+}
+
+['filterLang','filterHalType'].forEach(id =>
+  document.getElementById(id).addEventListener('change', () => applyFilters()));
+
+let searchTimeout;
+document.getElementById('filterSearch').addEventListener('input', () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(applyFilters, 200);
+});
+
+function applyFilters() {
+  const lang = document.getElementById('filterLang').value;
+  const ht   = document.getElementById('filterHalType').value;
+  const q    = document.getElementById('filterSearch').value.trim().toLowerCase();
+
+  filteredRows = allRows.filter(r => {
+    if (lang && r.language !== lang) return false;
+    if (ht   && r.hallucination_type !== ht) return false;
+    if (q && !(r.file_path||'').toLowerCase().includes(q)
+          && !(r.benchmark_id||'').toLowerCase().includes(q)
+          && !(r.image_tag||'').toLowerCase().includes(q)
+          && !(r.error_message||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  currentIdx = 0;
+  document.getElementById('filterCount').textContent =
+    `${filteredRows.length} of ${allRows.length} benchmarks`;
+  showStats();
+  renderRow();
+}
+
+// ── Stats ──────────────────────────────────────────
+function showStats() {
+  const rows = filteredRows;
+  const byLang = {}, byType = {};
+  rows.forEach(r => {
+    byLang[r.language] = (byLang[r.language]||0) + 1;
+    byType[r.hallucination_type] = (byType[r.hallucination_type]||0) + 1;
+  });
+
+  const langBars = Object.entries(byLang).sort((a,b)=>b[1]-a[1])
+    .map(([l,c]) => `<span style="color:var(--blue)">${esc(l)}</span>: ${c}`).join(' &middot; ');
+  const typeBars = Object.entries(byType).sort((a,b)=>b[1]-a[1])
+    .map(([t,c]) => `<span style="color:var(--yellow)">${esc(t)}</span>: ${c}`).join(' &middot; ');
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card">
+      <div class="value" style="color:var(--blue)">${rows.length}</div>
+      <div class="label">Benchmarks</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" style="color:var(--blue)">${Object.keys(byLang).length}</div>
+      <div class="label">Languages</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" style="color:var(--yellow)">${Object.keys(byType).length}</div>
+      <div class="label">Hallu Types</div>
+    </div>
+    <div class="stat-card" style="flex:1;min-width:200px">
+      <div style="font-size:12px;line-height:1.6">${langBars}</div>
+      <div class="label">By Language</div>
+    </div>
+    <div class="stat-card" style="flex:1;min-width:200px">
+      <div style="font-size:12px;line-height:1.6">${typeBars}</div>
+      <div class="label">By Type</div>
+    </div>
+  `;
+}
+
+// ── Navigation ─────────────────────────────────────
+function goPrev()  { if (currentIdx > 0) { currentIdx--; renderRow(); } }
+function goNext()  { if (currentIdx < filteredRows.length - 1) { currentIdx++; renderRow(); } }
+function goFirst() { currentIdx = 0; renderRow(); }
+function goLast()  { currentIdx = filteredRows.length - 1; renderRow(); }
+function jumpTo()  {
+  const v = parseInt(document.getElementById('jumpInput').value);
+  if (v >= 1 && v <= filteredRows.length) { currentIdx = v - 1; renderRow(); }
+  document.getElementById('jumpInput').value = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'ArrowLeft')  goPrev();
+  if (e.key === 'ArrowRight') goNext();
+  if (e.key === 'f' || e.key === 'F') { document.getElementById('filterSearch').focus(); e.preventDefault(); }
+});
+
+// ── Rendering helpers ──────────────────────────────
+function esc(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function renderCodeLines(lines, cls, marker) {
+  return lines.map(l =>
+    `<div class="code-line ${cls}"><div class="line-no"></div><div class="line-marker">${marker}</div><div class="line-content">${esc(l)}</div></div>`
+  ).join('');
+}
+
+function expandHidden(el) {
+  const idx = parseInt(el.dataset.chunk);
+  const chunk = _hiddenChunks[idx];
+  if (!chunk) return;
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = renderCodeLines(chunk.lines, chunk.cls, chunk.marker);
+  el.replaceWith(...wrapper.children);
+}
+
+function renderCollapsible(lines, cls, marker) {
+  const MAX = 25;
+  if (lines.length <= MAX * 2) return renderCodeLines(lines, cls, marker);
+  const top = lines.slice(0, MAX);
+  const mid = lines.slice(MAX, -MAX);
+  const bot = lines.slice(-MAX);
+  const ci  = _hiddenChunks.length;
+  _hiddenChunks.push({ lines: mid, cls, marker });
+  return renderCodeLines(top, cls, marker) +
+    `<div class="section-divider expandable" data-chunk="${ci}" onclick="expandHidden(this)">` +
+      `<span class="line-expand"></span><span>⋯ ${mid.length} lines hidden — click to expand ⋯</span><span class="line-expand"></span>` +
+    `</div>` + renderCodeLines(bot, cls, marker);
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).catch(() => {});
+}
+
+// ── Main row render ────────────────────────────────
+function renderRow() {
+  const total = filteredRows.length;
+  document.getElementById('rowCounter').textContent = total ? `${currentIdx + 1} / ${total}` : '0 / 0';
+  document.getElementById('btnPrev').disabled  = currentIdx <= 0;
+  document.getElementById('btnFirst').disabled = currentIdx <= 0;
+  document.getElementById('btnNext').disabled  = currentIdx >= total - 1;
+  document.getElementById('btnLast').disabled  = currentIdx >= total - 1;
+
+  if (!total) {
+    document.getElementById('mainContent').innerHTML = `
+      <div class="empty-state"><div class="icon">🔍</div><h2>No benchmarks match</h2><p>Try adjusting filters.</p></div>`;
+    return;
+  }
+
+  const row = filteredRows[currentIdx];
+  const prefix      = row.prompt || '';
+  const suffix      = row.suffix || '';
+  const golden      = row.golden_completion || '';
+  const hallucinated = row.hallucinated_completion || '';
+  const lang        = row.language || '?';
+  const filePath    = row.file_path || '';
+  const halType     = row.hallucination_type || '';
+  const errMsg      = row.error_message || '';
+  const benchId     = row.benchmark_id || '';
+  const imageTag    = row.image_tag || '';
+  const license     = (row.license || '').trim();
+  const repoUrl     = (row.repo_url || '').trim();
+  // Build full image ref. Public images live at ${REGISTRY}/${imageTag}.
+  // Override the registry by setting `window.DELULU_REGISTRY` before loading
+  // the page; defaults to the placeholder shown below.
+  const REGISTRY = (window.DELULU_REGISTRY || 'delulubench').replace(/\/+$/, '');
+  const dockerImage = imageTag ? REGISTRY + '/' + imageTag : '';
+  currentDockerImage = dockerImage;
+
+  const prefixLines  = prefix ? prefix.split('\n') : [];
+  const goldenLines  = golden ? golden.split('\n') : [];
+  const hallucLines  = hallucinated ? hallucinated.split('\n') : [];
+  const suffixLines  = suffix ? suffix.split('\n') : [];
+  _hiddenChunks = [];
+
+  // Build the diff view
+  let codeHtml = '';
+  if (prefixLines.length) {
+    codeHtml += `<div class="section-divider"><span>PREFIX</span><span class="line-expand"></span><span>${prefixLines.length} lines</span></div>`;
+    codeHtml += renderCollapsible(prefixLines, 'ctx', ' ');
+  }
+  if (goldenLines.length) {
+    codeHtml += `<div class="section-divider golden"><span>✅ GOLDEN COMPLETION</span><span class="line-expand"></span><span>${goldenLines.length} lines</span></div>`;
+    codeHtml += renderCodeLines(goldenLines, 'add', '+');
+  }
+  if (hallucLines.length) {
+    codeHtml += `<div class="section-divider hallucinated"><span>❌ HALLUCINATED COMPLETION</span><span class="line-expand"></span><span>${hallucLines.length} lines</span></div>`;
+    codeHtml += renderCodeLines(hallucLines, 'del', '−');
+  }
+  if (suffixLines.length) {
+    codeHtml += `<div class="section-divider"><span>SUFFIX</span><span class="line-expand"></span><span>${suffixLines.length} lines</span></div>`;
+    codeHtml += renderCollapsible(suffixLines, 'ctx', ' ');
+  }
+
+  const fullImage = dockerImage || imageTag;
+  const pullCmd   = dockerImage;
+  const verifyCmd = `docker run --rm ${dockerImage} verify hallucinated`;
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="meta-bar">
+      <span class="badge lang">${esc(lang)}</span>
+      <span class="badge haltype">⚡ ${esc(halType)}</span>
+      <span class="badge id-badge">${esc(benchId)}</span>
+      ${license ? `<span class="badge license" title="License">📜 ${esc(license)}</span>` : ''}
+      ${repoUrl ? `<a class="badge repo-link" href="${esc(repoUrl)}" target="_blank" rel="noopener noreferrer" title="${esc(repoUrl)}">🔗 ${esc(repoUrl.replace(/^https?:\/\/(www\.)?github\.com\//, ''))}</a>` : ''}
+      <div class="spacer"></div>
+      <span class="filepath" title="${esc(filePath)}">${esc(filePath)}</span>
+    </div>
+
+    <div class="image-bar">
+      <span class="label">📦 Image:</span>
+      <code>${esc(fullImage)}</code>
+      <button class="copy-btn" onclick="copyText(${JSON.stringify(pullCmd)})" title="Copy image ref">📋</button>
+      <span class="label" style="margin-left:12px">Run:</span>
+      <code style="font-size:10px">${esc(verifyCmd)}</code>
+      <button class="copy-btn" onclick="copyText(${JSON.stringify(verifyCmd)})" title="Copy command">📋</button>
+    </div>
+
+    <div class="code-container">
+      <div class="diff-panel">
+        <div class="diff-header">
+          <span>📝</span> ${esc(lang)} — ${esc(filePath.split('/').pop() || filePath)}
+        </div>
+        <div class="code-block">${codeHtml}</div>
+      </div>
+
+      ${errMsg ? `
+      <div class="error-panel">
+        <div class="error-header">
+          <span>🛑</span> Verification Error
+        </div>
+        <div class="error-body">${esc(errMsg)}</div>
+      </div>` : ''}
+
+      ${renderDockerPanel(dockerImage)}
+    </div>
+  `;
+
+  // Scroll to top on navigate
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  initDockerPanel();
+}
+
+// ── Docker Tools ───────────────────────────────────
+
+function renderDockerPanel(imageRef) {
+  if (!imageRef) return '';
+  return `
+    <div class="docker-panel">
+      <div class="docker-panel-header">
+        <span>🐳</span> Docker Tools
+        <span id="dockerStatusBadge" class="docker-status-badge checking">checking...</span>
+      </div>
+      <div class="docker-panel-body" id="dockerBody">
+
+        <div id="dockerNotice" class="docker-notice" style="display:none"></div>
+
+        <div id="dockerTools" style="display:none">
+
+          <div class="docker-section">
+            <div class="docker-section-label">Image</div>
+            <div class="docker-pull-row">
+              <code class="docker-image-ref" title="${esc(imageRef)}">${esc(imageRef)}</code>
+              <span class="docker-pull-status" id="pullStatusText"></span>
+              <button class="docker-btn" id="btnPull" onclick="doPull()" style="display:none">⬇️ Pull Image</button>
+            </div>
+            <div id="pullProgress" style="display:none">
+              <div class="docker-progress"><div class="docker-progress-fill"></div></div>
+              <span class="docker-progress-text">Pulling image... this may take a moment</span>
+            </div>
+          </div>
+
+          <hr class="docker-sep" id="verifySep" style="display:none">
+
+          <div id="dockerVerifySection" style="display:none">
+            <div class="docker-section">
+              <div class="docker-section-label">Run Verification</div>
+              <div class="docker-verify-row">
+                <button class="docker-btn docker-btn-green" id="btnVerifyGolden" onclick="doVerify('golden')">✅ Verify Golden</button>
+                <button class="docker-btn docker-btn-red" id="btnVerifyHalluc" onclick="doVerify('hallucinated')">❌ Verify Hallucinated</button>
+              </div>
+            </div>
+
+            <div class="docker-section" style="margin-top:12px">
+              <div class="docker-section-label">Custom Completion</div>
+              <textarea id="patchInput" class="docker-textarea"
+                placeholder="Paste your FIM completion code here...&#10;It will be inserted between the prefix and suffix shown above."></textarea>
+              <div class="docker-verify-row">
+                <button class="docker-btn docker-btn-blue" id="btnVerifyPatch" onclick="doVerifyPatch()">🔍 Verify Patch</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="dockerResultsSection" style="display:none">
+            <hr class="docker-sep">
+            <div class="docker-section">
+              <div class="docker-section-label">Result</div>
+              <div id="dockerResultContent" class="docker-result"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function initDockerPanel() {
+  if (!currentDockerImage) return;
+  const badge = document.getElementById('dockerStatusBadge');
+  const notice = document.getElementById('dockerNotice');
+  const tools = document.getElementById('dockerTools');
+  if (!badge) return;
+
+  // Check Docker availability (cached after first call)
+  if (dockerAvailable === null) {
+    try {
+      const r = await fetch('/api/health');
+      const d = await r.json();
+      dockerAvailable = d.docker === true;
+    } catch {
+      dockerAvailable = false;
+    }
+  }
+
+  if (!dockerAvailable) {
+    badge.className = 'docker-status-badge unavailable';
+    badge.textContent = 'unavailable';
+    notice.style.display = 'block';
+    notice.innerHTML = 'Docker tools require the local API server.<br>Run <code>python serve_viewer.py</code> in the <code>verification/</code> folder and open the viewer from there.';
+    tools.style.display = 'none';
+    return;
+  }
+
+  badge.className = 'docker-status-badge available';
+  badge.textContent = 'connected';
+  notice.style.display = 'none';
+  tools.style.display = 'block';
+
+  // Check pull status
+  await checkPullStatus();
+}
+
+async function checkPullStatus() {
+  const pullStatus = document.getElementById('pullStatusText');
+  const btnPull = document.getElementById('btnPull');
+  if (!pullStatus) return;
+
+  // Fast path: already known pulled
+  if (pulledImages.has(currentDockerImage)) {
+    showImageReady();
+    return;
+  }
+
+  pullStatus.className = 'docker-pull-status';
+  pullStatus.textContent = 'checking...';
+  btnPull.style.display = 'none';
+
+  try {
+    const r = await fetch('/api/image-check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: currentDockerImage }),
+    });
+    const d = await r.json();
+    if (d.pulled) {
+      pulledImages.add(currentDockerImage);
+      showImageReady();
+    } else {
+      showImageNotPulled();
+    }
+  } catch {
+    showImageNotPulled();
+  }
+}
+
+function showImageReady() {
+  const pullStatus = document.getElementById('pullStatusText');
+  const btnPull = document.getElementById('btnPull');
+  const sep = document.getElementById('verifySep');
+  const verify = document.getElementById('dockerVerifySection');
+  const progress = document.getElementById('pullProgress');
+  if (!pullStatus) return;
+
+  pullStatus.className = 'docker-pull-status pulled';
+  pullStatus.innerHTML = '● Ready';
+  btnPull.style.display = 'none';
+  if (progress) progress.style.display = 'none';
+  sep.style.display = 'block';
+  verify.style.display = 'block';
+}
+
+function showImageNotPulled() {
+  const pullStatus = document.getElementById('pullStatusText');
+  const btnPull = document.getElementById('btnPull');
+  const sep = document.getElementById('verifySep');
+  const verify = document.getElementById('dockerVerifySection');
+  if (!pullStatus) return;
+
+  pullStatus.className = 'docker-pull-status not-pulled';
+  pullStatus.innerHTML = '○ Not pulled';
+  btnPull.style.display = 'inline-flex';
+  sep.style.display = 'none';
+  verify.style.display = 'none';
+}
+
+async function doPull() {
+  const btn = document.getElementById('btnPull');
+  const progress = document.getElementById('pullProgress');
+  const pullStatus = document.getElementById('pullStatusText');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Pulling...';
+  progress.style.display = 'block';
+  pullStatus.className = 'docker-pull-status';
+  pullStatus.textContent = '';
+
+  try {
+    const r = await fetch('/api/pull', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: currentDockerImage }),
+    });
+    const d = await r.json();
+
+    if (d.status === 'pulled' || d.status === 'already_pulled') {
+      pulledImages.add(currentDockerImage);
+      showImageReady();
+    } else {
+      progress.style.display = 'none';
+      btn.disabled = false;
+      btn.innerHTML = '⬇️ Pull Image';
+      pullStatus.className = 'docker-pull-status error';
+      pullStatus.textContent = 'Pull failed: ' + (d.message || 'unknown error').slice(0, 200);
+    }
+  } catch (e) {
+    progress.style.display = 'none';
+    btn.disabled = false;
+    btn.innerHTML = '⬇️ Pull Image';
+    pullStatus.className = 'docker-pull-status error';
+    pullStatus.textContent = 'Error: ' + e.message;
+  }
+}
+
+function setVerifyButtonsDisabled(disabled) {
+  ['btnVerifyGolden', 'btnVerifyHalluc', 'btnVerifyPatch'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = disabled;
+  });
+}
+
+function showResultLoading() {
+  const section = document.getElementById('dockerResultsSection');
+  const content = document.getElementById('dockerResultContent');
+  section.style.display = 'block';
+  content.innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:12px;display:flex;align-items:center;gap:8px"><span class="spinner"></span> Running verification...</div>';
+}
+
+async function doVerify(mode) {
+  const btnId = mode === 'golden' ? 'btnVerifyGolden' : 'btnVerifyHalluc';
+  const btn = document.getElementById(btnId);
+  const origHTML = btn.innerHTML;
+
+  setVerifyButtonsDisabled(true);
+  btn.innerHTML = '<span class="spinner"></span> Running...';
+  showResultLoading();
+
+  try {
+    const r = await fetch('/api/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: currentDockerImage, mode }),
+    });
+    const d = await r.json();
+    renderVerifyResult(d, mode);
+  } catch (e) {
+    renderVerifyError(e.message);
+  } finally {
+    btn.innerHTML = origHTML;
+    setVerifyButtonsDisabled(false);
+  }
+}
+
+async function doVerifyPatch() {
+  const textarea = document.getElementById('patchInput');
+  const completion = textarea.value;
+  if (!completion.trim()) {
+    textarea.focus();
+    textarea.style.borderColor = 'var(--red-text)';
+    setTimeout(() => textarea.style.borderColor = '', 1500);
+    return;
+  }
+
+  const btn = document.getElementById('btnVerifyPatch');
+  const origHTML = btn.innerHTML;
+
+  setVerifyButtonsDisabled(true);
+  btn.innerHTML = '<span class="spinner"></span> Running...';
+  showResultLoading();
+
+  try {
+    const r = await fetch('/api/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: currentDockerImage, mode: 'patch', completion }),
+    });
+    const d = await r.json();
+    renderVerifyResult(d, 'patch');
+  } catch (e) {
+    renderVerifyError(e.message);
+  } finally {
+    btn.innerHTML = origHTML;
+    setVerifyButtonsDisabled(false);
+  }
+}
+
+function renderVerifyResult(data, mode) {
+  const rc = document.getElementById('dockerResultContent');
+  if (data.error) { renderVerifyError(data.error); return; }
+
+  const result = data.result || {};
+  const isValid = result.is_valid === true;
+  const elapsed = result.elapsed_seconds != null ? result.elapsed_seconds + 's' : '';
+  const hdrClass = isValid ? 'pass' : 'fail';
+  const hdrIcon = isValid ? '✅' : '❌';
+  const hdrText = isValid ? 'Verification Passed' : 'Verification Failed';
+  const modeLabel = mode === 'patch' ? 'Custom Patch' : mode.charAt(0).toUpperCase() + mode.slice(1);
+
+  const jsonStr = JSON.stringify(result, null, 2);
+
+  rc.innerHTML =
+    '<div class="docker-result-header ' + hdrClass + '">' +
+      hdrIcon + ' ' + esc(hdrText) +
+      '<span style="margin-left:auto;font-weight:400;font-size:11px;opacity:0.7">' + esc(modeLabel) + ' &middot; ' + esc(elapsed) + '</span>' +
+    '</div>' +
+    '<div class="docker-result-body">' + esc(jsonStr) + '</div>';
+}
+
+function renderVerifyError(message) {
+  const rc = document.getElementById('dockerResultContent');
+  rc.innerHTML =
+    '<div class="docker-result-header err">⚠️ Error</div>' +
+    '<div class="docker-result-body">' + esc(String(message)) + '</div>';
+}
+
+</script>
+
+</body>
+</html>
