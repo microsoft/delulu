@@ -10,7 +10,12 @@
   <img alt="languages" src="https://img.shields.io/badge/languages-7-blueviolet">
   <img alt="hallucination types" src="https://img.shields.io/badge/hallucination%20types-4-orange">
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/code-MIT-green"></a>
+  <a href="https://arxiv.org/abs/2605.07024"><img alt="arXiv" src="https://img.shields.io/badge/arXiv-2605.07024-b31b1b"></a>
   <a href="https://huggingface.co/datasets/microsoft/delulu-fim-benchmark"><img alt="HF" src="https://img.shields.io/badge/🤗-dataset-yellow"></a>
+</p>
+
+<p align="center">
+  <a href="https://arxiv.org/abs/2605.07024"><strong>📄 Read the preprint on arXiv →</strong></a>
 </p>
 
 <p align="center">
@@ -190,11 +195,11 @@ examples/            # 5-minute walkthrough on a 14-sample mini set
 ## Citation
 
 ```bibtex
-@misc{delulu2026,
-  title  = {Delulu: A Verified Multi-Lingual Benchmark for Code Hallucination Detection in Fill-in-the-Middle Tasks},
-  author = {Erfanian, Mahdi and Troncoso, Nelson Daniel and Garg, Aashna and Gale, Amabel and Liu, Xiaoyu and Golnari, Pareesa Ameneh and Fu, Shengyu},
-  year   = {2026},
-  url    = {https://github.com/microsoft/delulu}
+@inproceedings{Erfanian2026Delulu,
+  title={Delulu: A Verified Multi-Lingual Benchmark for Code Hallucination Detection in Fill-in-the-Middle Tasks},
+  author={Mahdi Erfanian and Nelson Troncoso and Aashna Garg and Amabel Gale and Xiaoyu Liu and Pareesa Ameneh Golnari and Shengyu Fu},
+  year={2026},
+  url={https://arxiv.org/abs/2605.07024}
 }
 ```
 
@@ -209,6 +214,6 @@ A machine-readable citation is in [CITATION.cff](CITATION.cff).
 
 ## Links
 
-- Paper (arXiv): _TBA_
+- Paper (arXiv): <https://arxiv.org/abs/2605.07024>
 - Hugging Face dataset: <https://huggingface.co/datasets/microsoft/delulu-fim-benchmark>
 - Docker Hub: _TBA_
