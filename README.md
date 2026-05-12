@@ -1,52 +1,126 @@
-# Delulu
+<h1 align="center">Delulu</h1>
 
-**Delulu** is a multilingual benchmark for measuring **code-completion hallucinations** in modern code LLMs.
+<p align="center">
+  <strong>A verified multilingual benchmark for code-completion hallucinations.</strong><br>
+  Every sample runs. Every hallucination is provably wrong.
+</p>
 
-Each sample is a real-world Fill-in-the-Middle (FIM) snippet annotated with:
+<p align="center">
+  <img alt="samples" src="https://img.shields.io/badge/samples-1%2C947-blue">
+  <img alt="languages" src="https://img.shields.io/badge/languages-7-blueviolet">
+  <img alt="hallucination types" src="https://img.shields.io/badge/hallucination%20types-4-orange">
+  <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/code-MIT-green"></a>
+  <a href="https://huggingface.co/datasets/microsoft/delulu-fim-benchmark"><img alt="HF" src="https://img.shields.io/badge/🤗-dataset-yellow"></a>
+</p>
 
-- a **golden** completion that compiles / runs in the original repository, and
-- a **hallucinated** completion that *looks* plausible but is provably wrong (uses an undefined symbol, a non-existent method/parameter, or a missing import).
+<p align="center">
+  <img src="sample.png" alt="Delulu benchmark viewer showing a verified hallucination sample" width="900">
+</p>
 
-Every sample also ships as a self-contained Docker image that can run
-`verify golden` / `verify hallucinated` / `verify patch <your-completion>`,
-so any score on Delulu is execution-grounded.
+<p align="center">
+  <em>Every Delulu sample ships as a self-contained Docker image. The viewer above lets you browse the dataset, pull a sample's verifier, and re-run <code>verify golden</code> / <code>verify hallucinated</code> / <code>verify patch &lt;your-completion&gt;</code> with one click — so every score on Delulu is execution-grounded.</em>
+</p>
+
+---
+
+## Why Delulu?
+
+Modern code LLMs hallucinate confidently: they invent functions that don't
+exist, pass parameters the API never accepted, and import modules nobody
+wrote. Most "hallucination" benchmarks score this with a textual judge — but
+plausible-looking code is exactly what these models are good at, so judges
+disagree and scores drift.
+
+**Delulu grounds every label in execution.** For each Fill-in-the-Middle
+context we ship:
+
+- a **golden** completion that compiles and passes the original repository's
+  tests, and
+- a **hallucinated** completion that *looks* plausible but provably fails —
+  the symbol doesn't exist, the method signature is wrong, the import
+  resolves to nothing.
+
+Both completions are verified inside a per-sample Docker image. If a model's
+output runs, it runs against the same harness the labels did.
+
+## Highlights
+
+- 🧪 **Execution-grounded.** Every hallucination has a reproducible failure
+  trace inside its own Docker image.
+- 🌍 **7 languages, 1 schema.** C++, C#, Go, Java, TypeScript, Python, Rust —
+  unified `prefix` / `suffix` / `golden` / `hallucinated` columns.
+- 🔬 **Real repos, real APIs.** Samples are mined from permissively licensed
+  GitHub projects, with `license` and `repo_url` recorded per row.
+- 🧰 **Two evaluation modes out of the box** — an LLM-as-judge harness and an
+  execution-based pass@1 + offline-metrics runner.
+- 🖥️ **Browsable viewer.** A local UI (also a Docker image) shows the diff,
+  the verifier error trace, and lets you re-run any patch live.
+- 📦 **One row, one image.** No flaky environment setup — the verifier
+  carries its own toolchain.
 
 ## Stats
 
+<div align="center">
+
 | Languages | Samples | Unique FIM contexts | Hallucination types |
-| --- | --- | --- | --- |
+| :---: | :---: | :---: | :---: |
 | C++, C#, Go, Java, TypeScript, Python, Rust | **1,947** | 947 | `import`, `method`, `parameter`, `undefinedvariable` |
 
-| Language | Count | | Type | Count |
-| --- | ---: | --- | --- | ---: |
-| TypeScript | 420 | | undefinedvariable | 576 |
-| Python | 370 | | import | 476 |
-| Go | 291 | | method | 460 |
-| Rust | 252 | | parameter | 435 |
-| C# | 246 | | | |
-| Java | 243 | | | |
-| C++ | 125 | | | |
+</div>
 
-## What's in the repo
+<table align="center">
+<tr>
+<td valign="top">
 
+| Language    | Count |
+| ----------- | ----: |
+| TypeScript  |   420 |
+| Python      |   370 |
+| Go          |   291 |
+| Rust        |   252 |
+| C#          |   246 |
+| Java        |   243 |
+| C++         |   125 |
+
+</td>
+<td valign="top">
+
+| Hallucination type   | Count |
+| -------------------- | ----: |
+| `undefinedvariable`  |   576 |
+| `import`             |   476 |
+| `method`             |   460 |
+| `parameter`          |   435 |
+
+</td>
+</tr>
+</table>
+
+## Quickstart
+
+```python
+from tools.load import load_delulu
+df = load_delulu()
+print(df.shape, df["language"].value_counts())
 ```
-data/                # delulu.csv + datasheet
-tools/
-  load.py / stats.py / slice.py / show.py    # CLIs for working with the dataset
-  viewer/                                       # browser UI (also a Docker image)
-evaluations/
-  run_delulu_judges.py        # LLM-as-judge harness (the "judge" tool)
-  run_completion_metrics.py   # pass@1 + offline metrics (the "metrics" tool)
-examples/            # 5-minute walkthrough on a 14-sample mini set
+
+Or pull it straight from the Hub:
+
+```python
+from datasets import load_dataset
+ds = load_dataset("microsoft/delulu-fim-benchmark", split="test")
 ```
+
+For an end-to-end 5-minute walkthrough on a 14-sample mini set, see
+[examples/quickstart.md](examples/quickstart.md).
 
 ## The two evaluation tools
 
 ### 1. Judge — *Can a foundation model tell which completion is hallucinated?*
 
-`evaluations/run_delulu_judges.py` shows a judge model the prefix, suffix, and
-a candidate completion, asks it to score `0` or `1`, and counts a sample as
-correct only when the judge scores **golden=1** AND **hallucinated=0**.
+`evaluations/run_delulu_judges.py` shows a judge model the prefix, suffix,
+and a candidate completion, asks it to score `0` or `1`, and counts a sample
+as correct only when the judge scores **golden=1** AND **hallucinated=0**.
 
 ```bash
 cp .env.example .env
@@ -83,8 +157,7 @@ python evaluations/run_completion_metrics.py \
 ```
 
 Verifier images are pulled from `${DELULU_REGISTRY}` (defaults to a
-pre-release registry; the public Docker Hub mirror is TBA). See
-[evaluations/README.md](evaluations/README.md).
+pre-release registry; the public Docker Hub mirror is TBA).
 
 ## Viewer
 
@@ -97,23 +170,20 @@ docker run --rm -p 127.0.0.1:8000:8000 \
     delulubench/delulu-viewer:v1
 ```
 
-## Quickstart
+The viewer is what's shown in the screenshot at the top.
 
-```python
-from tools.load import load_delulu
-df = load_delulu()
-print(df.shape, df["language"].value_counts())
+## What's in the repo
+
 ```
-
-A Hugging Face mirror is published at
-[microsoft/delulu-fim-benchmark](https://huggingface.co/datasets/microsoft/delulu-fim-benchmark):
-
-```python
-from datasets import load_dataset
-ds = load_dataset("microsoft/delulu-fim-benchmark", split="test")
+data/                # delulu.csv + datasheet
+tools/
+  load.py / stats.py / slice.py / show.py    # CLIs for working with the dataset
+  viewer/                                    # browser UI (also a Docker image)
+evaluations/
+  run_delulu_judges.py        # LLM-as-judge harness (the "judge" tool)
+  run_completion_metrics.py   # pass@1 + offline metrics (the "metrics" tool)
+examples/            # 5-minute walkthrough on a 14-sample mini set
 ```
-
-For an end-to-end 5-minute walkthrough, see [examples/quickstart.md](examples/quickstart.md).
 
 ## Citation
 
