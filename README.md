@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>A verified multilingual benchmark for code-completion hallucinations.</strong><br>
-  Every sample runs. Every hallucination is provably wrong.
+  Every golden completion compiles. Every hallucination provably doesn't.
 </p>
 
 <p align="center">
@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <em>Every Delulu sample ships as a self-contained Docker image. The viewer above lets you browse the dataset, pull a sample's verifier, and re-run <code>verify golden</code> / <code>verify hallucinated</code> / <code>verify patch &lt;your-completion&gt;</code> with one click — so every score on Delulu is execution-grounded.</em>
+  <em>Every Delulu sample ships as a self-contained Docker image. The viewer above lets you browse the dataset, pull a sample's verifier, and re-run <code>verify golden</code> / <code>verify hallucinated</code> / <code>verify patch &lt;your-completion&gt;</code> with one click — so every label is grounded in a real compile / type-check outcome.</em>
 </p>
 
 ---
@@ -34,27 +34,28 @@ disagree and scores drift.
 **Delulu grounds every label in execution.** For each Fill-in-the-Middle
 context we ship:
 
-- a **golden** completion that compiles and passes the original repository's
-  tests, and
-- a **hallucinated** completion that *looks* plausible but provably fails —
-  the symbol doesn't exist, the method signature is wrong, the import
-  resolves to nothing.
+- a **golden** completion that compiles cleanly in the original repository,
+  and
+- a **hallucinated** completion that *looks* plausible but provably fails to
+  compile — the symbol doesn't exist, the method signature is wrong, the
+  import resolves to nothing.
 
-Both completions are verified inside a per-sample Docker image. If a model's
-output runs, it runs against the same harness the labels did.
+Both completions are verified inside a per-sample Docker image that runs the
+project's build/type-check toolchain, so every label is grounded in a real
+compiler or type-checker outcome — not in a model's opinion.
 
 ## Highlights
 
-- 🧪 **Execution-grounded.** Every hallucination has a reproducible failure
-  trace inside its own Docker image.
+- 🧪 **Compiler-grounded.** Every hallucination has a reproducible compile /
+  type-check failure inside its own Docker image.
 - 🌍 **7 languages, 1 schema.** C++, C#, Go, Java, TypeScript, Python, Rust —
   unified `prefix` / `suffix` / `golden` / `hallucinated` columns.
 - 🔬 **Real repos, real APIs.** Samples are mined from permissively licensed
   GitHub projects, with `license` and `repo_url` recorded per row.
-- 🧰 **Two evaluation modes out of the box** — an LLM-as-judge harness and an
-  execution-based pass@1 + offline-metrics runner.
+- 🧰 **Two evaluation modes out of the box** — an LLM-as-judge harness and a
+  compile-based pass@1 + offline-metrics runner.
 - 🖥️ **Browsable viewer.** A local UI (also a Docker image) shows the diff,
-  the verifier error trace, and lets you re-run any patch live.
+  the compiler error trace, and lets you re-run any patch live.
 - 📦 **One row, one image.** No flaky environment setup — the verifier
   carries its own toolchain.
 
@@ -136,8 +137,9 @@ resumable. See [evaluations/README.md](evaluations/README.md).
 `evaluations/run_completion_metrics.py` takes a CSV of model predictions
 (columns: `benchmark_id`, `model_completion`) and computes:
 
-- **pass@1** — execution-based, by piping each completion into the
-  per-sample Docker verifier image (`docker run -i <image> verify patch`).
+- **pass@1** — compile-based, by piping each completion into the per-sample
+  Docker verifier image (`docker run -i <image> verify patch`), which runs
+  the project's build / type-check toolchain.
 - **exact_match** — strict equality with the golden completion.
 - **edit_similarity** — char-level normalised Levenshtein vs. golden.
 - **hallucination_rate** — share of completions closer to the *hallucinated*
