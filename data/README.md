@@ -49,7 +49,7 @@ The 1,947 samples are drawn from **319 public GitHub repositories**. Every row p
 | --- | ---: |
 | MIT | 818 |
 | Apache-2.0 | 594 |
-| UNLICENSED\* | 104 |
+| UNLICENSED | 104 |
 | EPL-2.0 | 93 |
 | GPL-3.0 | 71 |
 | MPL-2.0 | 43 |
@@ -74,8 +74,6 @@ The 1,947 samples are drawn from **319 public GitHub repositories**. Every row p
 | BSD-3-Clause-Clear | 3 |
 | GPL-2.0-only | 2 |
 | CC-BY-NC-SA-4.0 | 1 |
-
-\* `UNLICENSED` is the npm convention for "proprietary, all rights reserved"; rows so labelled are not offered under an open-source license by their upstream authors and are retained for evaluation completeness only. Downstream users who plan to redistribute these rows must obtain permission from the original copyright holder.
 
 Delulu follows the *collection-of-licenses* model: see [DATA_LICENSE.md](../DATA_LICENSE.md) for full per-license obligations.
 
